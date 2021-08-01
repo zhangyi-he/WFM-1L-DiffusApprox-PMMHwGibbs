@@ -1,11 +1,11 @@
-// Estimating selection coefficients and testing their changes from ancient DNA data II: extension for modelling sampling uncertainties
+// Estimating selection coefficients and testing their changes from ancient DNA data
 // Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu, Zhangyi He
 
-// version 1.1
+// version 1.5
 // Phenotypes controlled by a single gene
 // Non-constant natural selection and non-constant demographic histories
 // Prior knowledge from modern samples (gene polymorphism)
-// Joint estimation of the underlying trajectory of mutant allele frequencies and unknown alleles
+// Joint estimation of the underlying trajectory of mutant allele frequencies and unknown genotypes
 
 // Genotype frequency data
 
@@ -405,9 +405,6 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
     }
   }
 
-  // after the event of interest
-  fts_mat = calculateFitnessMat_arma(sel_cof(1), dom_par);
-
   if (smp_gen(evt_ind) == smp_gen(evt_ind - 1)) {
     mut_frq_pre.col(evt_ind) = mut_frq_pre.col(evt_ind - 1);
     mut_frq_pst.col(evt_ind) = mut_frq_pst.col(evt_ind - 1);
@@ -417,7 +414,7 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
     cout << "generation: " << smp_gen(evt_ind) << endl;
     mut_frq_tmp = mut_frq_pst.col(evt_ind - 1);
     for (arma::uword i = 0; i < pcl_num; i++) {
-      arma::drowvec path = simulateWFD_arma(sel_cof(1), dom_par, pop_siz.subvec(smp_gen(evt_ind - 1), smp_gen(evt_ind)), ref_siz, mut_frq_tmp(i), smp_gen(evt_ind - 1), smp_gen(evt_ind), ptn_num);
+      arma::drowvec path = simulateWFD_arma(sel_cof(0), dom_par, pop_siz.subvec(smp_gen(evt_ind - 1), smp_gen(evt_ind)), ref_siz, mut_frq_tmp(i), smp_gen(evt_ind - 1), smp_gen(evt_ind), ptn_num);
       mut_frq_pth.submat(i, (smp_gen(evt_ind - 1) - smp_gen(0)) * ptn_num, i, (smp_gen(evt_ind) - smp_gen(0)) * ptn_num) = path;
       mut_frq_tmp(i) = arma::as_scalar(path.tail(1));
       gen_frq_tmp.col(i) = calculateGenoFrq_arma(fts_mat, mut_frq_tmp(i));
@@ -427,6 +424,9 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
     gen_frq_pre.slice(evt_ind) = gen_frq_tmp;
     gen_frq_pst.slice(evt_ind) = gen_frq_tmp;
   }
+
+  // after the event of interest
+  fts_mat = calculateFitnessMat_arma(sel_cof(1), dom_par);
 
   for (arma::uword k = evt_ind + 1; k < smp_gen.n_elem; k++) {
     cout << "generation: " << smp_gen(k) << endl;
@@ -537,17 +537,17 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
     }
   }
 
-  // after the event of interest
-  fts_mat = calculateFitnessMat_arma(sel_cof(1), dom_par);
-
   if (smp_gen(evt_ind) != smp_gen(evt_ind - 1)) {
     for (arma::uword i = 0; i < pcl_num; i++) {
-      arma::drowvec path = simulateWFD_arma(sel_cof(1), dom_par, pop_siz.subvec(smp_gen(evt_ind - 1), smp_gen(evt_ind)), ref_siz, mut_frq_pst(i), smp_gen(evt_ind - 1), smp_gen(evt_ind), ptn_num);
+      arma::drowvec path = simulateWFD_arma(sel_cof(0), dom_par, pop_siz.subvec(smp_gen(evt_ind - 1), smp_gen(evt_ind)), ref_siz, mut_frq_pst(i), smp_gen(evt_ind - 1), smp_gen(evt_ind), ptn_num);
       mut_frq_pth.submat(i, (smp_gen(evt_ind - 1) - smp_gen(0)) * ptn_num, i, (smp_gen(evt_ind) - smp_gen(0)) * ptn_num) = path;
       mut_frq_pre(i) = arma::as_scalar(path.tail(1));
     }
     mut_frq_pst = mut_frq_pre;
   }
+
+  // after the event of interest
+  fts_mat = calculateFitnessMat_arma(sel_cof(1), dom_par);
 
   for (arma::uword k = evt_ind + 1; k < smp_gen.n_elem; k++) {
     wght = arma::zeros<arma::dcolvec>(pcl_num);
@@ -676,7 +676,7 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
   cout << "iteration: " << 1 << endl;
 
   frq_pth.fill(0.5);
-  arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof_chn.col(0), dom_par, evt_gen, frq_pth_chn.row(0));
+  arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof, dom_par, evt_gen, frq_pth);
   imp_smp_chn.slice(0) = imp_smp.rows(1, 3);
 
   arma::imat grp_smp = groupSample_arma(imp_smp, evt_gen);
@@ -696,13 +696,13 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
   for (arma::uword i = 1; i < itn_num; i++) {
     cout << "iteration: " << i + 1 << endl;
 
-    arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof_chn.col(i - 1), dom_par, evt_gen, frq_pth_chn.row(i - 1));
+    imp_smp = imputeSample_arma(raw_smp, sel_cof_chn.col(i - 1), dom_par, evt_gen, frq_pth_chn.row(i - 1));
     imp_smp_chn.slice(i) = imp_smp.rows(1, 3);
 
-    arma::imat grp_smp = groupSample_arma(imp_smp, evt_gen);
-    arma::irowvec smp_gen = grp_smp.row(0);
-    arma::irowvec smp_siz = grp_smp.row(1);
-    arma::imat smp_cnt = grp_smp.rows(2, 4);
+    grp_smp = groupSample_arma(imp_smp, evt_gen);
+    smp_gen = grp_smp.row(0);
+    smp_siz = grp_smp.row(1);
+    smp_cnt = grp_smp.rows(2, 4);
 
     // draw the candidate of the selection coefficients from the random walk proposal
     sel_cof_chn.col(i) = sel_cof_chn.col(i - 1) + sel_cof_sd % arma::randn<arma::dcolvec>(2);
@@ -770,7 +770,7 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
   cout << "iteration: " << 1 << endl;
 
   frq_pth.fill(0.5);
-  arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof_chn.col(0), dom_par, evt_gen, frq_pth_chn.row(0));
+  arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof, dom_par, evt_gen, frq_pth);
   imp_smp_chn.slice(0) = imp_smp.rows(1, 3);
 
   arma::imat grp_smp = groupSample_arma(imp_smp, evt_gen);
@@ -791,13 +791,13 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
   for (arma::uword i = 1; i < itn_num; i++) {
     cout << "iteration: " << i + 1 << endl;
 
-    arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof_chn.col(i - 1), dom_par, evt_gen, frq_pth_chn.row(i - 1));
+    imp_smp = imputeSample_arma(raw_smp, sel_cof_chn.col(i - 1), dom_par, evt_gen, frq_pth_chn.row(i - 1));
     imp_smp_chn.slice(i) = imp_smp.rows(1, 3);
 
-    arma::imat grp_smp = groupSample_arma(imp_smp, evt_gen);
-    arma::irowvec smp_gen = grp_smp.row(0);
-    arma::irowvec smp_siz = grp_smp.row(1);
-    arma::imat smp_cnt = grp_smp.rows(2, 4);
+    grp_smp = groupSample_arma(imp_smp, evt_gen);
+    smp_gen = grp_smp.row(0);
+    smp_siz = grp_smp.row(1);
+    smp_cnt = grp_smp.rows(2, 4);
 
     // draw the candidate of the selection coefficients from the random walk proposal
     U = arma::randn<arma::dcolvec>(2);
