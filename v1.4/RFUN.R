@@ -1,7 +1,7 @@
-#' @title Estimating selection coefficients and testing their changes from ancient DNA data II: extension for modelling sampling uncertainties
+#' @title Estimating selection coefficients and testing their changes from ancient DNA data
 #' @author Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu, Zhangyi He
 
-#' version 1.0
+#' version 1.4
 #' Phenotypes controlled by a single gene
 #' Non-constant natural selection and non-constant demographic histories
 #' Prior knowledge from modern samples (gene polymorphism)
@@ -32,7 +32,7 @@ library("compiler")
 #enableJIT(1)
 
 # call C++ functions
-sourceCpp("./Code/Code v1.0/Code 1L/Code v1.0.1/CFUN.cpp")
+sourceCpp("./Code/Code v1.0/Code v1.4/CFUN.cpp")
 
 ################################################################################
 
@@ -47,7 +47,7 @@ sourceCpp("./Code/Code v1.0/Code 1L/Code v1.0.1/CFUN.cpp")
 #' @param lst_gen the generation of the simulated mutant allele frequency trajectory ended
 
 #' Standard version
-simulateWFM <- function(sel_cof, dom_par, pop_siz, int_frq, int_gen, lst_gen) {
+simulateWFM <- function(sel_cof, dom_par, pop_siz, int_frq, evt_gen, int_gen, lst_gen) {
   if (evt_gen >= lst_gen) {
     fts_mat <- calculateFitnessMat_arma(sel_cof[1], dom_par)
     WFM <- simulateWFM_arma(fts_mat, pop_siz, int_frq, int_gen, lst_gen)
@@ -65,11 +65,11 @@ simulateWFM <- function(sel_cof, dom_par, pop_siz, int_frq, int_gen, lst_gen) {
     gen_frq_pth_pre_evt <- as.matrix(WFM$gen_frq_pth)
 
     fts_mat <- calculateFitnessMat_arma(sel_cof[2], dom_par)
-    WFM <- simulateWFM_arma(fts_mat, pop_siz, mut_frq_pth_pre_evt[, ncol(mut_frq_pth_pre_evt)], evt_gen, lst_gen)
+    WFM <- simulateWFM_arma(fts_mat, pop_siz, mut_frq_pth_pre_evt[length(mut_frq_pth_pre_evt)], evt_gen, lst_gen)
     mut_frq_pth_pst_evt <- as.vector(WFM$mut_frq_pth)
     gen_frq_pth_pst_evt <- as.matrix(WFM$gen_frq_pth)
 
-    mut_frq_pth <- cbind(mut_frq_pth_pre_evt, mut_frq_pth_pst_evt[, -1])
+    mut_frq_pth <- append(mut_frq_pth_pre_evt, mut_frq_pth_pst_evt[-1])
     gen_frq_pth <- cbind(gen_frq_pth_pre_evt, gen_frq_pth_pst_evt[, -1])
   }
 
@@ -95,7 +95,7 @@ cmpsimulateWFM <- cmpfun(simulateWFM)
 #' @param dat_aug = TRUE/FALSE (return the simulated sample trajectory with data augmentation or not)
 
 #' Standard version
-simulateWFD <- function(sel_cof, dom_par, pop_siz, ref_siz, int_frq, int_gen, lst_gen, ptn_num, dat_aug = TRUE) {
+simulateWFD <- function(sel_cof, dom_par, pop_siz, ref_siz, int_frq, evt_gen, int_gen, lst_gen, ptn_num, dat_aug = TRUE) {
   if (evt_gen >= lst_gen) {
     mut_frq_pth <- simulateWFD_arma(sel_cof[1], dom_par, pop_siz, ref_siz, int_frq, int_gen, lst_gen, ptn_num)
     mut_frq_pth <- as.vector(mut_frq_pth)
@@ -109,7 +109,7 @@ simulateWFD <- function(sel_cof, dom_par, pop_siz, ref_siz, int_frq, int_gen, ls
     mut_frq_pth_pst_evt <- simulateWFD_arma(sel_cof[2], dom_par, pop_siz, ref_siz, tail(mut_frq_pth_pre_evt, n = 1), evt_gen, lst_gen, ptn_num)
     mut_frq_pth_pst_evt <- as.vector(mut_frq_pth_pst_evt)
 
-    mut_frq_pth <- cbind(mut_frq_pth_pre_evt, mut_frq_pth_pst_evt[, -1])
+    mut_frq_pth <- append(mut_frq_pth_pre_evt, mut_frq_pth_pst_evt[-1])
   }
 
   if (dat_aug == FALSE) {
@@ -141,27 +141,67 @@ simulateHMM <- function(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_
   int_gen <- min(smp_gen)
   lst_gen <- max(smp_gen)
 
-  # generate the population mutant allele frequency trajectory
-  if (model == "WFM") {
-    WFM <- cmpsimulateWFM(sel_cof, dom_par, pop_siz, int_con, evt_gen, int_gen, lst_gen)
-    mut_frq <- as.vector(WFM$mut_frq_pth)
-    gen_frq <- as.matrix(WFM$gen_frq_pth)
-  }
-  if (model == "WFD") {
-    mut_frq <- cmpsimulateWFD(sel_cof, dom_par, pop_siz, ref_siz, int_con, evt_gen, int_gen, lst_gen, ptn_num, dat_aug = FALSE)
-    mut_frq <- as.vector(mut_frq)
-    gen_frq <- matrix(NA, nrow = 10, ncol = ncol(mut_frq))
-    fts_mat <- calculateFitnessMat_arma(sel_cof, dom_par)
-    for (k in 1:ncol(mut_frq)) {
-      ale_frq <- c(1 - mut_frq[k], mut_frq[k])
-      gen_frq <- fts_mat * (ale_frq %*% t(ale_frq)) / sum(fts_mat * (ale_frq %*% t(ale_frq)))
-      gen_frq[lower.tri(gen_frq, diag = FALSE)] <- NA
-      gen_frq[, k] <- discard(as.vector(2 * gen_frq - diag(diag(gen_frq), nrow = 4, ncol = 4)), is.na)
+  # generate the population genotype frequency trajectories
+  los_cnt <- 0
+  while (TRUE) {
+    if (los_cnt > 1e+03) {
+      message("Warning message: mutant allele lost completely from the population in all 1000 replicates.")
+      break
+    } else {
+      los_cnt <- los_cnt + 1
     }
-    gen_frq <- as.matrix(gen_frq)
-  }
+    
+    if (model == "WFM") {
+      WFM <- cmpsimulateWFM(sel_cof, dom_par, pop_siz, int_con, evt_gen, int_gen, lst_gen)
+      mut_frq <- as.vector(WFM$mut_frq_pth)
+      gen_frq <- as.matrix(WFM$gen_frq_pth)
+    }
+    if (model == "WFD") {
+      mut_frq <- cmpsimulateWFD(sel_cof, dom_par, pop_siz, ref_siz, int_con, evt_gen, int_gen, lst_gen, ptn_num, dat_aug = FALSE)
+      mut_frq <- as.vector(mut_frq)
+      gen_frq <- matrix(NA, nrow = 3, ncol = length(mut_frq))
+      if (evt_gen >= lst_gen) {
+        fts_mat <- calculateFitnessMat_arma(sel_cof[1], dom_par)
+        for (k in 1:length(mut_frq)) {
+          pop_ale_frq <- c(1 - mut_frq[k], mut_frq[k])
+          pop_gen_frq <- fts_mat * (pop_ale_frq %*% t(pop_ale_frq)) / sum(fts_mat * (pop_ale_frq %*% t(pop_ale_frq)))
+          pop_gen_frq[lower.tri(pop_gen_frq, diag = FALSE)] <- NA
+          gen_frq[, k] <- discard(as.vector(2 * pop_gen_frq - diag(diag(pop_gen_frq), nrow = 2, ncol = 2)), is.na)
+        }
+      } else if (evt_gen < int_gen) {
+        fts_mat <- calculateFitnessMat_arma(sel_cof[2], dom_par)
+        for (k in 1:length(mut_frq)) {
+          pop_ale_frq <- c(1 - mut_frq[k], mut_frq[k])
+          pop_gen_frq <- fts_mat * (pop_ale_frq %*% t(pop_ale_frq)) / sum(fts_mat * (pop_ale_frq %*% t(pop_ale_frq)))
+          pop_gen_frq[lower.tri(pop_gen_frq, diag = FALSE)] <- NA
+          gen_frq[, k] <- discard(as.vector(2 * pop_gen_frq - diag(diag(pop_gen_frq), nrow = 2, ncol = 2)), is.na)
+        }
+      } else {
+        fts_mat <- calculateFitnessMat_arma(sel_cof[1], dom_par)
+        for (k in 1:(evt_gen - int_gen + 1)) {
+          pop_ale_frq <- c(1 - mut_frq[k], mut_frq[k])
+          pop_gen_frq <- fts_mat * (pop_ale_frq %*% t(pop_ale_frq)) / sum(fts_mat * (pop_ale_frq %*% t(pop_ale_frq)))
+          pop_gen_frq[lower.tri(pop_gen_frq, diag = FALSE)] <- NA
+          gen_frq[, k] <- discard(as.vector(2 * pop_gen_frq - diag(diag(pop_gen_frq), nrow = 2, ncol = 2)), is.na)
+        }
 
-  # generate the sample allele counts at all sampling time points
+        fts_mat <- calculateFitnessMat_arma(sel_cof[2], dom_par)
+        for (k in (evt_gen - int_gen + 2):length(mut_frq)) {
+          pop_ale_frq <- c(1 - mut_frq[k], mut_frq[k])
+          pop_gen_frq <- fts_mat * (pop_ale_frq %*% t(pop_ale_frq)) / sum(fts_mat * (pop_ale_frq %*% t(pop_ale_frq)))
+          pop_gen_frq[lower.tri(pop_gen_frq, diag = FALSE)] <- NA
+          gen_frq[, k] <- discard(as.vector(2 * pop_gen_frq - diag(diag(pop_gen_frq), nrow = 2, ncol = 2)), is.na)
+        }
+      }
+      gen_frq <- as.matrix(gen_frq)
+    }
+    
+    if (tail(mut_frq, 1) > 0 && tail(mut_frq, 1) < 1) {
+      break
+    }
+  }
+  
+  # generate the sample genotype counts at all sampling time points
   raw_smp <- NULL
   for (k in 1:length(smp_gen)) {
     raw_smp <- cbind(raw_smp, rbind(rep(smp_gen[k], times = smp_siz[k]), rmultinom(smp_siz[k], size = 1, prob = gen_frq[, smp_gen[k] - int_gen + 1])))
@@ -169,8 +209,8 @@ simulateHMM <- function(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_
   raw_smp <- rbind(raw_smp, matrix(0, nrow = 3, ncol = ncol(raw_smp)))
   raw_smp <- as.data.frame(t(raw_smp))
   rownames(raw_smp) <- NULL
-  colnames(raw_smp) <- c("gbp", "A0A0", "A0A1", "A1A1", "A0?", "A1?", "??")
-
+  colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1", "A0?", "A1?", "??")
+  
   return(list(raw_smp = raw_smp,
               gen_frq = gen_frq,
               mut_frq = mut_frq))
@@ -187,7 +227,7 @@ cmpsimulateHMM <- cmpfun(simulateHMM)
 #' @param pop_siz the size of the horse population (non-constant)
 #' @param ref_siz the reference size of the horse population
 #' @param evt_gen the generation that the event of interest occurred
-#' @param raw_smp
+#' @param raw_smp the sample of ancient horses (sampling times and individual genotypes)
 #' @param ptn_num the number of subintervals divided per generation in the Euler-Maruyama method
 #' @param pcl_num the number of particles generated in the bootstrap particle filter
 
@@ -195,25 +235,27 @@ cmpsimulateHMM <- cmpfun(simulateHMM)
 runBPF <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, raw_smp, ptn_num, pcl_num) {
   # preprocess the raw sample
   if (ncol(raw_smp) == 7) {
-    # evt_gen <- round((2000 - evt_gen) / 8)
-    evt_gen <- evt_gen - min(raw_smp$age_mean)
     raw_smp <- raw_smp[, -(5:7)]
+    rownames(raw_smp) <- NULL
+    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+
     raw_smp <- raw_smp[which(rowSums(raw_smp[, 2:4]) != 0), ]
-    raw_smp <- raw_smp[order(raw_smp$age_mean), ]
-    # raw_smp$age_mean <- round((2000 - raw_smp$age_mean) / 8)
-    raw_smp$age_mean <- raw_smp$age_mean - min(raw_smp$age_mean)
+    raw_smp <- raw_smp[order(raw_smp$generation), ]
+    evt_gen <- evt_gen - min(raw_smp$generation)
+    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
     rownames(raw_smp) <- NULL
     colnames(raw_smp) <- NULL
     raw_smp <- t(as.matrix(raw_smp))
   } else {
-    # evt_gen <- round((2000 - evt_gen) / 8)
-    evt_gen <- evt_gen - min(raw_smp$age_mean)
     raw_smp <- raw_smp[, -(2:3)]
     raw_smp <- raw_smp[, -(5:7)]
+    rownames(raw_smp) <- NULL
+    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+
     raw_smp <- raw_smp[which(rowSums(raw_smp[, 2:4]) != 0), ]
-    raw_smp <- raw_smp[order(raw_smp$age_mean), ]
-    # raw_smp$age_mean <- round((2000 - raw_smp$age_mean) / 8)
-    raw_smp$age_mean <- raw_smp$age_mean - min(raw_smp$age_mean)
+    raw_smp <- raw_smp[order(raw_smp$generation), ]
+    evt_gen <- evt_gen - min(raw_smp$generation)
+    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
     rownames(raw_smp) <- NULL
     colnames(raw_smp) <- NULL
     raw_smp <- t(as.matrix(raw_smp))
@@ -242,7 +284,7 @@ cmprunBPF <- cmpfun(runBPF)
 #' @param pop_siz the size of the horse population (non-constant)
 #' @param ref_siz the reference size of the horse population
 #' @param evt_gen the generation that the event of interest occurred
-#' @param raw_smp
+#' @param raw_smp the sample of ancient horses (sampling times and individual genotypes)
 #' @param ptn_num the number of subintervals divided per generation in the Euler-Maruyama method
 #' @param pcl_num the number of particles generated in the bootstrap particle filter
 #' @param gap_num the number of particles increased or decreased in the optimal particle number search
@@ -251,25 +293,27 @@ cmprunBPF <- cmpfun(runBPF)
 calculateOptimalParticleNum <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, raw_smp, ptn_num, pcl_num, gap_num) {
   # preprocess the raw sample
   if (ncol(raw_smp) == 7) {
-    # evt_gen <- round((2000 - evt_gen) / 8)
-    evt_gen <- evt_gen - min(raw_smp$age_mean)
     raw_smp <- raw_smp[, -(5:7)]
+    rownames(raw_smp) <- NULL
+    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+
     raw_smp <- raw_smp[which(rowSums(raw_smp[, 2:4]) != 0), ]
-    raw_smp <- raw_smp[order(raw_smp$age_mean), ]
-    # raw_smp$age_mean <- round((2000 - raw_smp$age_mean) / 8)
-    raw_smp$age_mean <- raw_smp$age_mean - min(raw_smp$age_mean)
+    raw_smp <- raw_smp[order(raw_smp$generation), ]
+    evt_gen <- evt_gen - min(raw_smp$generation)
+    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
     rownames(raw_smp) <- NULL
     colnames(raw_smp) <- NULL
     raw_smp <- t(as.matrix(raw_smp))
   } else {
-    # evt_gen <- round((2000 - evt_gen) / 8)
-    evt_gen <- evt_gen - min(raw_smp$age_mean)
     raw_smp <- raw_smp[, -(2:3)]
     raw_smp <- raw_smp[, -(5:7)]
+    rownames(raw_smp) <- NULL
+    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+
     raw_smp <- raw_smp[which(rowSums(raw_smp[, 2:4]) != 0), ]
-    raw_smp <- raw_smp[order(raw_smp$age_mean), ]
-    # raw_smp$age_mean <- round((2000 - raw_smp$age_mean) / 8)
-    raw_smp$age_mean <- raw_smp$age_mean - min(raw_smp$age_mean)
+    raw_smp <- raw_smp[order(raw_smp$generation), ]
+    evt_gen <- evt_gen - min(raw_smp$generation)
+    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
     rownames(raw_smp) <- NULL
     colnames(raw_smp) <- NULL
     raw_smp <- t(as.matrix(raw_smp))
@@ -293,7 +337,7 @@ cmpcalculateOptimalParticleNum <- cmpfun(calculateOptimalParticleNum)
 #' @param pop_siz the size of the horse population (non-constant)
 #' @param ref_siz the reference size of the horse population
 #' @param evt_gen the generation that the event of interest occurred
-#' @param raw_smp
+#' @param raw_smp the sample of ancient horses (sampling times and individual genotypes)
 #' @param ptn_num the number of subintervals divided per generation in the Euler-Maruyama method
 #' @param pcl_num the number of particles generated in the bootstrap particle filter
 #' @param itn_num the number of the iterations carried out in the PMMH
@@ -302,25 +346,27 @@ cmpcalculateOptimalParticleNum <- cmpfun(calculateOptimalParticleNum)
 runPMMH <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, raw_smp, ptn_num, pcl_num, itn_num) {
   # preprocess the raw sample
   if (ncol(raw_smp) == 7) {
-    # evt_gen <- round((2000 - evt_gen) / 8)
-    evt_gen <- evt_gen - min(raw_smp$age_mean)
     raw_smp <- raw_smp[, -(5:7)]
+    rownames(raw_smp) <- NULL
+    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+
     raw_smp <- raw_smp[which(rowSums(raw_smp[, 2:4]) != 0), ]
-    raw_smp <- raw_smp[order(raw_smp$age_mean), ]
-    # raw_smp$age_mean <- round((2000 - raw_smp$age_mean) / 8)
-    raw_smp$age_mean <- raw_smp$age_mean - min(raw_smp$age_mean)
+    raw_smp <- raw_smp[order(raw_smp$generation), ]
+    evt_gen <- evt_gen - min(raw_smp$generation)
+    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
     rownames(raw_smp) <- NULL
     colnames(raw_smp) <- NULL
     raw_smp <- t(as.matrix(raw_smp))
   } else {
-    # evt_gen <- round((2000 - evt_gen) / 8)
-    evt_gen <- evt_gen - min(raw_smp$age_mean)
     raw_smp <- raw_smp[, -(2:3)]
     raw_smp <- raw_smp[, -(5:7)]
+    rownames(raw_smp) <- NULL
+    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+
     raw_smp <- raw_smp[which(rowSums(raw_smp[, 2:4]) != 0), ]
-    raw_smp <- raw_smp[order(raw_smp$age_mean), ]
-    # raw_smp$age_mean <- round((2000 - raw_smp$age_mean) / 8)
-    raw_smp$age_mean <- raw_smp$age_mean - min(raw_smp$age_mean)
+    raw_smp <- raw_smp[order(raw_smp$generation), ]
+    evt_gen <- evt_gen - min(raw_smp$generation)
+    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
     rownames(raw_smp) <- NULL
     colnames(raw_smp) <- NULL
     raw_smp <- t(as.matrix(raw_smp))
@@ -344,7 +390,7 @@ cmprunPMMH <- cmpfun(runPMMH)
 #' @param pop_siz the size of the horse population (non-constant)
 #' @param ref_siz the reference size of the horse population
 #' @param evt_gen the generation that the event of interest occurred
-#' @param raw_smp
+#' @param raw_smp the sample of ancient horses (sampling times and individual genotypes)
 #' @param ptn_num the number of subintervals divided per generation in the Euler-Maruyama method
 #' @param pcl_num the number of particles generated in the bootstrap particle filter
 #' @param itn_num the number of the iterations carried out in the PMMH
@@ -355,25 +401,27 @@ cmprunPMMH <- cmpfun(runPMMH)
 runAdaptPMMH <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, raw_smp, ptn_num, pcl_num, itn_num, stp_siz, apt_rto) {
   # preprocess the raw sample
   if (ncol(raw_smp) == 7) {
-    # evt_gen <- round((2000 - evt_gen) / 8)
-    evt_gen <- evt_gen - min(raw_smp$age_mean)
     raw_smp <- raw_smp[, -(5:7)]
+    rownames(raw_smp) <- NULL
+    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+
     raw_smp <- raw_smp[which(rowSums(raw_smp[, 2:4]) != 0), ]
-    raw_smp <- raw_smp[order(raw_smp$age_mean), ]
-    # raw_smp$age_mean <- round((2000 - raw_smp$age_mean) / 8)
-    raw_smp$age_mean <- raw_smp$age_mean - min(raw_smp$age_mean)
+    raw_smp <- raw_smp[order(raw_smp$generation), ]
+    evt_gen <- evt_gen - min(raw_smp$generation)
+    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
     rownames(raw_smp) <- NULL
     colnames(raw_smp) <- NULL
     raw_smp <- t(as.matrix(raw_smp))
   } else {
-    # evt_gen <- round((2000 - evt_gen) / 8)
-    evt_gen <- evt_gen - min(raw_smp$age_mean)
     raw_smp <- raw_smp[, -(2:3)]
     raw_smp <- raw_smp[, -(5:7)]
+    rownames(raw_smp) <- NULL
+    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+
     raw_smp <- raw_smp[which(rowSums(raw_smp[, 2:4]) != 0), ]
-    raw_smp <- raw_smp[order(raw_smp$age_mean), ]
-    # raw_smp$age_mean <- round((2000 - raw_smp$age_mean) / 8)
-    raw_smp$age_mean <- raw_smp$age_mean - min(raw_smp$age_mean)
+    raw_smp <- raw_smp[order(raw_smp$generation), ]
+    evt_gen <- evt_gen - min(raw_smp$generation)
+    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
     rownames(raw_smp) <- NULL
     colnames(raw_smp) <- NULL
     raw_smp <- t(as.matrix(raw_smp))
@@ -397,7 +445,7 @@ cmprunAdaptPMMH <- cmpfun(runAdaptPMMH)
 #' @param pop_siz the size of the horse population (non-constant)
 #' @param ref_siz the reference size of the horse population
 #' @param evt_gen the generation that the event of interest occurred
-#' @param raw_smp
+#' @param raw_smp the sample of ancient horses (sampling times and individual genotypes)
 #' @param ptn_num the number of subintervals divided per generation in the Euler-Maruyama method
 #' @param pcl_num the number of particles generated in the bootstrap particle filter
 #' @param itn_num the number of the iterations carried out in the PMMH
@@ -411,25 +459,27 @@ cmprunAdaptPMMH <- cmpfun(runAdaptPMMH)
 runBayesianProcedure <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, raw_smp, ptn_num, pcl_num, itn_num, brn_num, thn_num, adp_set, ...) {
   # preprocess the raw sample
   if (ncol(raw_smp) == 7) {
-    # evt_gen <- round((2000 - evt_gen) / 8)
-    evt_gen <- evt_gen - min(raw_smp$age_mean)
     raw_smp <- raw_smp[, -(5:7)]
+    rownames(raw_smp) <- NULL
+    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+
     raw_smp <- raw_smp[which(rowSums(raw_smp[, 2:4]) != 0), ]
-    raw_smp <- raw_smp[order(raw_smp$age_mean), ]
-    # raw_smp$age_mean <- round((2000 - raw_smp$age_mean) / 8)
-    raw_smp$age_mean <- raw_smp$age_mean - min(raw_smp$age_mean)
+    raw_smp <- raw_smp[order(raw_smp$generation), ]
+    evt_gen <- evt_gen - min(raw_smp$generation)
+    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
     rownames(raw_smp) <- NULL
     colnames(raw_smp) <- NULL
     raw_smp <- t(as.matrix(raw_smp))
   } else {
-    # evt_gen <- round((2000 - evt_gen) / 8)
-    evt_gen <- evt_gen - min(raw_smp$age_mean)
     raw_smp <- raw_smp[, -(2:3)]
     raw_smp <- raw_smp[, -(5:7)]
+    rownames(raw_smp) <- NULL
+    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+
     raw_smp <- raw_smp[which(rowSums(raw_smp[, 2:4]) != 0), ]
-    raw_smp <- raw_smp[order(raw_smp$age_mean), ]
-    # raw_smp$age_mean <- round((2000 - raw_smp$age_mean) / 8)
-    raw_smp$age_mean <- raw_smp$age_mean - min(raw_smp$age_mean)
+    raw_smp <- raw_smp[order(raw_smp$generation), ]
+    evt_gen <- evt_gen - min(raw_smp$generation)
+    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
     rownames(raw_smp) <- NULL
     colnames(raw_smp) <- NULL
     raw_smp <- t(as.matrix(raw_smp))
