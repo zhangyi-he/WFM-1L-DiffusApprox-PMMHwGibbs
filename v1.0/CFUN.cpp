@@ -5,7 +5,8 @@
 // Phenotypes controlled by a single gene
 // Constant natural selection and constant demographic histories
 
-// Genotype frequency data
+// Input: called genotypes
+// Output: posteriors for the selection coefficient
 
 // C functions
 
@@ -483,10 +484,6 @@ arma::drowvec runPMMH_arma(const double& sel_cof, const double& dom_par, const i
 
       // calculate the likelihood
       log_lik(1) = calculateLogLikelihood_arma(sel_cof_chn(i), dom_par, pop_siz, smp_gen, smp_siz, smp_cnt, ptn_num, pcl_num);
-
-      // calculate the acceptance ratio
-      // double apt_rto = exp(log_lik(1) - log_lik(0));
-      // double apt_rto = exp((log_pri(1) + log_lik(1) + log_psl(1)) - (log_pri(0) + log_lik(0) + log_psl(0)));
 
       // calculate the acceptance ratio
       // double apt_rto = exp(log_lik(1) - log_lik(0));
