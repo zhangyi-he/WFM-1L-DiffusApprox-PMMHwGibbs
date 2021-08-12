@@ -5,7 +5,8 @@
 #' Phenotypes controlled by a single gene
 #' Constant natural selection and constant demographic histories
 
-#' Genotype frequency data
+#' Input: called genotypes
+#' Output: posteriors for the selection coefficient
 
 # set the directory
 setwd("~/Dropbox/Jeffery He/iResearch/Publications/2019/HE2021-WFM-1L-DiffusApprox-PMMHwGibbs-MolEcolResour")
@@ -26,7 +27,7 @@ library("plot3D")
 library("emdbook")
 
 # call R functions
-source("./Code/Code v1.0/Code v1.0/RFUN.R")
+source("./RFUN.R")
 
 ################################################################################
 
@@ -213,11 +214,11 @@ smp_frq <- smp_cnt %*% diag(1 / smp_siz)
 pop_frq <- sim_HMM_WFM$gen_frq
 
 save(model, sel_cof, dom_par, pop_siz, int_con, smp_gen, smp_siz, smp_cnt, smp_frq, pop_frq, sim_HMM_WFM,
-     file = "./Output/Output v1.0/TEST v1.0/TEST_SimData.rda")
+     file = "./TEST_SimData.rda")
 
-load("./Output/Output v1.0/TEST v1.0/TEST_SimData.rda")
+load("./TEST_SimData.rda")
 
-pdf(file = "./Output/Output v1.0/TEST v1.0/TEST_SimData.pdf", width = 16, height = 12)
+pdf(file = "./TEST_SimData.pdf", width = 16, height = 12)
 par(mfrow = c(2, 2), mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 k <- min(smp_gen):max(smp_gen)
 plot(k, pop_frq[1, ], type = 'l', lwd = 1.5,
@@ -248,7 +249,7 @@ dev.off()
 #' @param ptn_num the number of subintervals divided per generation in the Euler-Maruyama method
 #' @param pcl_num the number of particles generated in the bootstrap particle filter
 
-load("./Output/Output v1.0/TEST v1.0/TEST_SimData.rda")
+load("./TEST_SimData.rda")
 
 set.seed(test_seed)
 
@@ -262,9 +263,9 @@ pcl_num <- 1e+05
 system.time(BPF <- cmprunBPF(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num))
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, BPF,
-     file = "./Output/Output v1.0/TEST v1.0/TEST_BPF.rda")
+     file = "./TEST_BPF.rda")
 
-load("./Output/Output v1.0/TEST v1.0/TEST_BPF.rda")
+load("./TEST_BPF.rda")
 
 lik <- rep(1, pcl_num)
 wght <- BPF$wght
@@ -272,7 +273,7 @@ for (k in 1:length(smp_gen)) {
   lik <- lik * (cumsum(wght[, k]) / (1:pcl_num))
 }
 
-pdf(file = "./Output/Output v1.0/TEST v1.0/TEST_BPF_Likelihood.pdf", width = 8, height = 6)
+pdf(file = "./TEST_BPF_Likelihood.pdf", width = 8, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(1:pcl_num, log(lik), type = 'l',
      xlab = "Number of particles", ylab = "Log likelihood",
@@ -282,7 +283,7 @@ dev.off()
 pop_frq_pre_resmp <- BPF$gen_frq_pre_resmp
 pop_frq_pst_resmp <- BPF$gen_frq_pst_resmp
 
-pdf(file = "./Output/Output v1.0/TEST v1.0/TEST_BPF_Particle.pdf", width = 24, height = 66)
+pdf(file = "./TEST_BPF_Particle.pdf", width = 24, height = 66)
 par(mfrow = c(11, 3), mar = c(5.5, 5, 5.5, 2.5), cex.main = 2, cex.sub = 1.75, cex.axis = 1.75, cex.lab = 1.75)
 for (k in 1:length(smp_gen)) {
   hist_pst_resmp <- hist(pop_frq_pst_resmp[1, , k], breaks = seq(min(pop_frq_pst_resmp[1, , k], pop_frq_pre_resmp[1, , k]), max(pop_frq_pst_resmp[1, , k], pop_frq_pre_resmp[1, , k]), length.out = 50), plot = FALSE)
@@ -326,7 +327,7 @@ dev.off()
 #' @param pcl_num the number of particles generated in the bootstrap particle filter
 #' @param gap_num the number of particles increased or decreased in the optimal particle number search
 
-load("./Output/Output v1.0/TEST v1.0/TEST_SimData.rda")
+load("./TEST_SimData.rda")
 
 set.seed(test_seed)
 
@@ -341,14 +342,14 @@ gap_num <- 1e+02
 system.time(OptNum <- calculateOptimalParticleNum(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, gap_num))
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, gap_num, OptNum,
-     file = "./Output/Output v1.0/TEST v1.0/TEST_OptNum.rda")
+     file = "./TEST_OptNum.rda")
 
-load("./Output/Output v1.0/TEST v1.0/TEST_OptNum.rda")
+load("./TEST_OptNum.rda")
 
 opt_pcl_num <- OptNum$opt_pcl_num
 log_lik_sdv <- OptNum$log_lik_sdv
 
-pdf(file = "./Output/Output v1.0/TEST v1.0/TEST_OptNum.pdf", width = 8, height = 6)
+pdf(file = "./TEST_OptNum.pdf", width = 8, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(opt_pcl_num, log_lik_sdv, type = 'b', lwd = 2,
      xlab = "Particle number", ylab = "Log-likelihood standard deviation",
@@ -369,7 +370,7 @@ dev.off()
 #' @param pcl_num the number of particles generated in the bootstrap particle filter
 #' @param itn_num the number of the iterations carried out in the PMMH
 
-load("./Output/Output v1.0/Test v1.0/TEST_SimData.rda")
+load("./TEST_SimData.rda")
 
 set.seed(test_seed)
 
@@ -383,16 +384,16 @@ itn_num <- 2e+04
 
 system.time(PMMH <- cmprunPMMH(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num))
 
-load("./Output/Output v1.0/TEST v1.0/TEST_SimData.rda")
+load("./TEST_SimData.rda")
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, PMMH,
-     file = "./Output/Output v1.0/TEST v1.0/TEST_PMMH.rda")
+     file = "./TEST_PMMH.rda")
 
-load("./Output/Output v1.0/TEST v1.0/TEST_PMMH.rda")
+load("./TEST_PMMH.rda")
 
 sel_cof_chn <- PMMH
 
-pdf(file = "./Output/Output v1.0/TEST v1.0/TEST_PMMH_Traceplot.pdf", width = 8, height = 6)
+pdf(file = "./TEST_PMMH_Traceplot.pdf", width = 8, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(1:itn_num, sel_cof_chn[1:itn_num], type = 'l',
      xlab = "Iteration", ylab = "Selection coefficient",
@@ -411,7 +412,7 @@ sel_cof_est <- mean(sel_cof_chn)
 
 sel_cof_hpd <- HPDinterval(as.mcmc(sel_cof_chn), prob = 0.95)
 
-pdf(file = "./Output/Output v1.0/TEST v1.0/TEST_PMMH_Posterior.pdf", width = 8, height = 6)
+pdf(file = "./TEST_PMMH_Posterior.pdf", width = 8, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn, breaks = seq(min(sel_cof_chn), max(sel_cof_chn), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
@@ -437,7 +438,7 @@ dev.off()
 #' @param brn_num the number of the iterations for burn-in
 #' @param thn_num the number of the iterations for thinning
 
-load("./Output/Output v1.0/Test v1.0/TEST_SimData.rda")
+load("./TEST_SimData.rda")
 
 set.seed(test_seed)
 
@@ -453,18 +454,18 @@ thn_num <- 5e+00
 
 system.time(BayesianProcedure <- cmprunBayesianProcedure(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, brn_num, thn_num))
 
-load("./Output/Output v1.0/TEST v1.0/TEST_SimData.rda")
+load("./TEST_SimData.rda")
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, brn_num, thn_num, BayesianProcedure,
-     file = "./Output/Output v1.0/TEST v1.0/TEST_BayesProc.rda")
+     file = "./TEST_BayesProc.rda")
 
-load("./Output/Output v1.0/TEST v1.0/TEST_BayesProc.rda")
+load("./TEST_BayesProc.rda")
 
 sel_cof_chn <- BayesianProcedure$sel_cof_chn
 sel_cof_est <- BayesianProcedure$sel_cof_est
 sel_cof_hpd <- BayesianProcedure$sel_cof_hpd
 
-pdf(file = "./Output/Output v1.0/TEST v1.0/TEST_BayesProc_Posterior.pdf", width = 8, height = 6)
+pdf(file = "./TEST_BayesProc_Posterior.pdf", width = 8, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn, breaks = seq(min(sel_cof_chn), max(sel_cof_chn), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
