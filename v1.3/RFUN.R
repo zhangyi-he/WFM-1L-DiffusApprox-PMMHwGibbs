@@ -4,9 +4,11 @@
 #' version 1.3
 #' Phenotypes controlled by a single gene
 #' Non-constant natural selection and non-constant demographic histories
-#' Prior knowledge from modern samples (gene polymorphism)
 
-#' Genotype frequency data
+#' Integrate prior knowledge from modern samples (gene polymorphism)
+
+#' Input: called genotypes
+#' Output: posteriors for the selection coefficient
 
 #' R functions
 
@@ -31,7 +33,7 @@ library("compiler")
 #enableJIT(1)
 
 # call C++ functions
-sourceCpp("./Code/Code v1.0/Code v1.3/CFUN.cpp")
+sourceCpp("./CFUN.cpp")
 
 ################################################################################
 
