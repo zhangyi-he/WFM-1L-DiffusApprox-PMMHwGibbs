@@ -4,10 +4,11 @@
 // version 1.5
 // Phenotypes controlled by a single gene
 // Non-constant natural selection and non-constant demographic histories
-// Prior knowledge from modern samples (gene polymorphism)
-// Joint estimation of the underlying trajectory of mutant allele frequencies and unknown genotypes
 
-// Genotype frequency data
+// Integrate prior knowledge from modern samples (gene polymorphism)
+
+// Input: called genotypes
+// Output: posteriors for the selection coefficient, the genotype frequency trajectories of the population and the genotypes of the sample
 
 // C functions
 
@@ -188,7 +189,7 @@ double calculateEmissionProb_arma(const arma::icolvec& smp_cnt, const int& smp_s
   return prob;
 }
 
-// Impute the unknown alleles with the genotype frequency trajectories of the underlying population
+// Impute the missing genotypes with the genotype frequency trajectories of the underlying population
 // [[Rcpp::export]]
 arma::imat imputeSample_arma(const arma::imat& raw_smp, const arma::dcolvec& sel_cof, const double& dom_par, const int& evt_gen, const arma::drowvec& mut_pth) {
   // ensure RNG gets set/reset
@@ -724,10 +725,6 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
       // double apt_rto = exp(log_lik(1) - log_lik(0));
       // double apt_rto = exp((log_pri(1) + log_lik(1) + log_psl(1)) - (log_pri(0) + log_lik(0) + log_psl(0)));
 
-      // calculate the acceptance ratio
-      // double apt_rto = exp(log_lik(1) - log_lik(0));
-      // double apt_rto = exp((log_pri(1) + log_lik(1) + log_psl(1)) - (log_pri(0) + log_lik(0) + log_psl(0)));
-
       if (arma::randu() > exp(log_lik(1) - log_lik(0))) {
         sel_cof_chn.col(i) = sel_cof_chn.col(i - 1);
         log_lik(1) = log_lik(0);
@@ -816,10 +813,6 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
       // calculate the likelihood
       calculateLogLikelihood_arma(log_lik(1), frq_pth, sel_cof_chn.col(i), dom_par, pop_siz, ref_siz, smp_gen, smp_siz, smp_cnt, ptn_num, pcl_num);
       frq_pth_chn.row(i) = arma::conv_to<arma::drowvec >::from(frq_pth.elem(frq_idx));
-
-      // calculate the acceptance ratio
-      // double apt_rto = exp(log_lik(1) - log_lik(0));
-      // double apt_rto = exp((log_pri(1) + log_lik(1) + log_psl(1)) - (log_pri(0) + log_lik(0) + log_psl(0)));
 
       // calculate the acceptance ratio
       // double apt_rto = exp(log_lik(1) - log_lik(0));
