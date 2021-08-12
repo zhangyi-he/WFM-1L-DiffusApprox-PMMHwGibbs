@@ -5,7 +5,8 @@
 // Phenotypes controlled by a single gene
 // Non-constant natural selection and non-constant demographic histories
 
-// Genotype frequency data
+// Input: called genotypes
+// Output: posteriors for the selection coefficient
 
 // C functions
 
@@ -614,10 +615,6 @@ arma::dmat runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, con
       // double apt_rto = exp(log_lik(1) - log_lik(0));
       // double apt_rto = exp((log_pri(1) + log_lik(1) + log_psl(1)) - (log_pri(0) + log_lik(0) + log_psl(0)));
 
-      // calculate the acceptance ratio
-      // double apt_rto = exp(log_lik(1) - log_lik(0));
-      // double apt_rto = exp((log_pri(1) + log_lik(1) + log_psl(1)) - (log_pri(0) + log_lik(0) + log_psl(0)));
-
       if (arma::randu() > exp(log_lik(1) - log_lik(0))) {
         sel_cof_chn.col(i) = sel_cof_chn.col(i - 1);
         log_lik(1) = log_lik(0);
@@ -685,10 +682,6 @@ arma::dmat runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par
 
       // calculate the likelihood
       log_lik(1) = calculateLogLikelihood_arma(sel_cof_chn.col(i), dom_par, pop_siz, ref_siz, smp_gen, smp_siz, smp_cnt, ptn_num, pcl_num);
-
-      // calculate the acceptance ratio
-      // double apt_rto = exp(log_lik(1) - log_lik(0));
-      // double apt_rto = exp((log_pri(1) + log_lik(1) + log_psl(1)) - (log_pri(0) + log_lik(0) + log_psl(0)));
 
       // calculate the acceptance ratio
       // double apt_rto = exp(log_lik(1) - log_lik(0));
