@@ -5,7 +5,8 @@
 #' Phenotypes controlled by a single gene
 #' Constant natural selection and constant demographic histories
 
-#' Genotype frequency data
+#' Input: called genotypes
+#' Output: posteriors for the selection coefficient
 
 #' R functions
 
@@ -30,7 +31,7 @@ library("compiler")
 #enableJIT(1)
 
 # call C++ functions
-sourceCpp("./Code/Code v1.0/Code v1.0/CFUN.cpp")
+sourceCpp("./CFUN.cpp")
 
 ################################################################################
 
