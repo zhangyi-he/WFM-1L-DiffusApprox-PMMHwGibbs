@@ -4,10 +4,11 @@
 #' version 1.5
 #' Phenotypes controlled by a single gene
 #' Non-constant natural selection and non-constant demographic histories
-#' Prior knowledge from modern samples (gene polymorphism)
-#' Joint estimation of the underlying trajectory of mutant allele frequencies and unknown genotypes
 
-#' Genotype frequency data
+#' Integrate prior knowledge from modern samples (gene polymorphism)
+
+#' Input: called genotypes
+#' Output: posteriors for the selection coefficient, the genotype frequency trajectories of the population and the genotypes of the sample
 
 #' R functions
 
@@ -32,7 +33,7 @@ library("compiler")
 #enableJIT(1)
 
 # call C++ functions
-sourceCpp("./Code/Code v1.0/Code v1.5/CFUN.cpp")
+sourceCpp("./CFUN.cpp")
 
 ################################################################################
 
@@ -133,7 +134,7 @@ cmpsimulateWFD <- cmpfun(simulateWFD)
 #' @param evt_gen the generation that the event of interest occurred
 #' @param smp_gen the sampling time points measured in one generation
 #' @param smp_siz the count of the horses drawn from the population at all sampling time points
-#' @param mis_rat the rate of the unknown allele observed in the sample
+#' @param mis_rat the rate of the missing allele observed in the sample
 #' @param ref_siz the reference size of the horse population
 #' @param ptn_num the number of the subintervals divided per generation in the Euler-Maruyama method for the WFD
 
