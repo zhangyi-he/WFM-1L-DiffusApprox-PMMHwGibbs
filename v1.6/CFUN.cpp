@@ -4,11 +4,11 @@
 // version 1.6
 // Phenotypes controlled by a single gene
 // Non-constant natural selection and non-constant demographic histories
-// Prior knowledge from modern samples (gene polymorphism)
-// Genotype likelihoods
-// Joint estimation of the underlying trajectory of mutant allele frequencies and missing genotypes
 
-// Genotype frequency data
+// Integrate prior knowledge from modern samples (gene polymorphism)
+
+// Input: genotype likelihoods
+// Output: posteriors for the selection coefficient, the genotype frequency trajectories of the population and the genotypes of the sample
 
 // C functions
 
