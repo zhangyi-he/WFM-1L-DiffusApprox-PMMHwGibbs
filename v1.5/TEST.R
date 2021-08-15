@@ -29,7 +29,7 @@ library("plot3D")
 library("emdbook")
 
 # call R functions
-source("./Code/Code v1.0/Code v1.5/RFUN.R")
+source("./RFUN.R")
 
 ################################################################################
 
@@ -145,10 +145,10 @@ smp_siz <- rep(50, 11)
 mis_rat <- 3e-02
 
 sim_HMM_WFM <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_gen, smp_siz, mis_rat)
-raw_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$raw_smp, sum)
-smp_gen <- raw_smp[, 1]
-smp_siz <- rowSums(raw_smp[, -1])
-smp_cnt <- t(as.matrix(raw_smp[, 2:4]))
+imp_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$imp_smp, sum)
+smp_gen <- imp_smp[, 1]
+smp_siz <- rowSums(imp_smp[, -1])
+smp_cnt <- t(as.matrix(imp_smp[, 2:4]))
 smp_frq <- smp_cnt %*% diag(1 / smp_siz)
 pop_frq <- sim_HMM_WFM$gen_frq
 
@@ -226,10 +226,10 @@ smp_siz <- rep(50, 11)
 mis_rat <- 3e-02
 
 sim_HMM_WFM <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_gen, smp_siz, mis_rat)
-raw_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$raw_smp, sum)
-smp_gen <- raw_smp[, 1]
-smp_siz <- rowSums(raw_smp[, -1])
-smp_cnt <- t(as.matrix(raw_smp[, 2:4]))
+imp_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$imp_smp, sum)
+smp_gen <- imp_smp[, 1]
+smp_siz <- rowSums(imp_smp[, -1])
+smp_cnt <- t(as.matrix(imp_smp[, 2:4]))
 smp_frq <- smp_cnt %*% diag(1 / smp_siz)
 pop_frq <- sim_HMM_WFM$gen_frq
 
@@ -281,7 +281,7 @@ dom_par
 pop_siz
 ref_siz <- 1e+04
 evt_gen <- 240
-frq_pth <- pop_frq[3, ] + pop_frq[2, ] / 2
+frq_pth <- sim_HMM_WFM$mut_frq
 raw_smp <- sim_HMM_WFM$raw_smp
 ptn_num <- 5e+00
 pcl_num <- 1e+05
@@ -365,7 +365,7 @@ dom_par
 pop_siz
 ref_siz <- 1e+04
 evt_gen <- 240
-frq_pth <- pop_frq[3, ] + pop_frq[2, ] / 2
+frq_pth <- sim_HMM_WFM$mut_frq
 raw_smp <- sim_HMM_WFM$raw_smp
 ptn_num <- 5e+00
 pcl_num <- 1e+03
@@ -514,7 +514,7 @@ plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_c
 for (i in 1:dim(frq_pth_chn)[1]) {
    lines(min(smp_gen):max(smp_gen), frq_pth_chn[i, ], col = 'grey', lty = 1, lwd = 2)
 }
-lines(min(smp_gen):max(smp_gen), pop_frq[3, ] + pop_frq[2, ] / 2, col = 'red', lty = 1, lwd = 2)
+lines(min(smp_gen):max(smp_gen), sim_HMM_WFM$mut_frq, col = 'red', lty = 1, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_est, col = 'black', lty = 2, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[1, ], col = 'blue', lty = 2, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[2, ], col = 'blue', lty = 2, lwd = 2)
@@ -671,7 +671,7 @@ plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_c
 for (i in 1:dim(frq_pth_chn)[1]) {
    lines(min(smp_gen):max(smp_gen), frq_pth_chn[i, ], col = 'grey', lty = 1, lwd = 2)
 }
-lines(min(smp_gen):max(smp_gen), pop_frq[3, ] + pop_frq[2, ] / 2, col = 'red', lty = 1, lwd = 2)
+lines(min(smp_gen):max(smp_gen), sim_HMM_WFM$mut_frq, col = 'red', lty = 1, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_est, col = 'black', lty = 2, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[1, ], col = 'blue', lty = 2, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[2, ], col = 'blue', lty = 2, lwd = 2)
@@ -800,7 +800,7 @@ plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_c
 for (i in 1:dim(frq_pth_chn)[1]) {
    lines(min(smp_gen):max(smp_gen), frq_pth_chn[i, ], col = 'grey', lty = 1, lwd = 2)
 }
-lines(min(smp_gen):max(smp_gen), pop_frq[3, ] + pop_frq[2, ] / 2, col = 'red', lty = 1, lwd = 2)
+lines(min(smp_gen):max(smp_gen), sim_HMM_WFM$mut_frq, col = 'red', lty = 1, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_est, col = 'black', lty = 2, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[1, ], col = 'blue', lty = 2, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[2, ], col = 'blue', lty = 2, lwd = 2)
