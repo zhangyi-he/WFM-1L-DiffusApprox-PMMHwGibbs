@@ -29,7 +29,7 @@ library("plot3D")
 library("emdbook")
 
 # call R functions
-source("./Code/Code v1.0/Code v1.4/RFUN.R")
+source("./RFUN.R")
 
 ################################################################################
 
@@ -505,7 +505,7 @@ plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_c
 for (i in 1:dim(frq_pth_chn)[1]) {
    lines(min(smp_gen):max(smp_gen), frq_pth_chn[i, ], col = 'grey', lty = 1, lwd = 2)
 }
-lines(min(smp_gen):max(smp_gen), pop_frq[3, ] + pop_frq[2, ] / 2, col = 'red', lty = 1, lwd = 2)
+lines(min(smp_gen):max(smp_gen), sim_HMM_WFM$mut_frq, col = 'red', lty = 1, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_est, col = 'black', lty = 2, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[1, ], col = 'blue', lty = 2, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[2, ], col = 'blue', lty = 2, lwd = 2)
@@ -638,7 +638,7 @@ plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_c
 for (i in 1:dim(frq_pth_chn)[1]) {
    lines(min(smp_gen):max(smp_gen), frq_pth_chn[i, ], col = 'grey', lty = 1, lwd = 2)
 }
-lines(min(smp_gen):max(smp_gen), pop_frq[3, ] + pop_frq[2, ] / 2, col = 'red', lty = 1, lwd = 2)
+lines(min(smp_gen):max(smp_gen), sim_HMM_WFM$mut_frq, col = 'red', lty = 1, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_est, col = 'black', lty = 2, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[1, ], col = 'blue', lty = 2, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[2, ], col = 'blue', lty = 2, lwd = 2)
@@ -744,7 +744,7 @@ plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_c
 for (i in 1:dim(frq_pth_chn)[1]) {
    lines(min(smp_gen):max(smp_gen), frq_pth_chn[i, ], col = 'grey', lty = 1, lwd = 2)
 }
-lines(min(smp_gen):max(smp_gen), pop_frq[3, ] + pop_frq[2, ] / 2, col = 'red', lty = 1, lwd = 2)
+lines(min(smp_gen):max(smp_gen), sim_HMM_WFM$mut_frq, col = 'red', lty = 1, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_est, col = 'black', lty = 2, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[1, ], col = 'blue', lty = 2, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[2, ], col = 'blue', lty = 2, lwd = 2)
