@@ -540,9 +540,7 @@ colnames(imp_smp_est) <- c("generation", "A0A0", "A0A1", "A1A1")
 
 imp_smp <- sim_HMM_WFM$imp_smp
 imp_smp <- imp_smp[order(imp_smp$generation), ]
-imp_smp <- imp_smp[which(rowSums(raw_smp[, 2:4]) == 0), ]
-imp_smp_est <- imp_smp_est[which(rowSums(raw_smp[, 2:4]) == 0), ]
-err_rat <- imp_smp_est[, -1] - imp_smp[, -c(1, 5, 6, 7)]
+err_rat <- imp_smp_est[, -1] - imp_smp[, -1]
 err_rat$A0A0[which(err_rat$A0A0 < 0)] <- 0
 err_rat$A0A1[which(err_rat$A0A1 < 0)] <- 0
 err_rat$A1A1[which(err_rat$A1A1 < 0)] <- 0
@@ -697,9 +695,7 @@ colnames(imp_smp_est) <- c("generation", "A0A0", "A0A1", "A1A1")
 
 imp_smp <- sim_HMM_WFM$imp_smp
 imp_smp <- imp_smp[order(imp_smp$generation), ]
-imp_smp <- imp_smp[which(rowSums(raw_smp[, 2:4]) == 0), ]
-imp_smp_est <- imp_smp_est[which(rowSums(raw_smp[, 2:4]) == 0), ]
-err_rat <- imp_smp_est[, -1] - imp_smp[, -c(1, 5, 6, 7)]
+err_rat <- imp_smp_est[, -1] - imp_smp[, -1]
 err_rat$A0A0[which(err_rat$A0A0 < 0)] <- 0
 err_rat$A0A1[which(err_rat$A0A1 < 0)] <- 0
 err_rat$A1A1[which(err_rat$A1A1 < 0)] <- 0
@@ -816,9 +812,7 @@ imp_smp_est <- BayesianProcedure$imp_smp_est
 
 imp_smp <- sim_HMM_WFM$imp_smp
 imp_smp <- imp_smp[order(imp_smp$generation), ]
-imp_smp <- imp_smp[which(rowSums(raw_smp[, 2:4]) == 0), ]
-imp_smp_est <- imp_smp_est[which(rowSums(raw_smp[, 2:4]) == 0), ]
-err_rat <- imp_smp_est[, -1] - imp_smp[, -c(1, 5, 6, 7)]
+err_rat <- imp_smp_est[, -1] - imp_smp[, -1]
 err_rat$A0A0[which(err_rat$A0A0 < 0)] <- 0
 err_rat$A0A1[which(err_rat$A0A1 < 0)] <- 0
 err_rat$A1A1[which(err_rat$A1A1 < 0)] <- 0
