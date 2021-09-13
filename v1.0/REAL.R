@@ -11,7 +11,7 @@
 #' Horse base coat colours (ASIP & MC1R) and white spotting patterns (KIT13 & KIT16 & TRMP1)
 
 # set the directory
-setwd("~/Dropbox/Jeffery He/iResearch/Publications/2019/HE2021-WFM-1L-DiffusApprox-PMMHwGibbs-MolEcolResour")
+setwd("~/Dropbox/Jeffery He/iResearch/Publications/2019/HE2021-WFM-1L-DiffusApprox-PMMHwGibbs1-MolEcolResour")
 
 #install.packages("RColorBrewer")
 library("RColorBrewer")
@@ -29,14 +29,14 @@ library("plot3D")
 library("emdbook")
 
 # call R functions
-source("./RFUN.R")
+source("./Code/Code v1.0/Code v1.0/RFUN.R")
 
 ################################################################################
 
 #' ASIP
 
 #' Raw data of Wutke et al. (2016) from 12500 BC
-load("./REAL.rda")
+load("./Data/REAL.rda")
 
 set.seed(1)
 raw_smp <- ASIP
@@ -60,13 +60,13 @@ itn_num <- 2e+04
 system.time(PMMH <- cmprunPMMH(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num))
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, PMMH,
-     file = "./REAL_COL_ASIP_1.rda")
+     file = "./Output/Output v1.0/REAL v1.0/REAL_COL_ASIP_1.rda")
 
-load("./REAL_COL_ASIP_1.rda")
+load("./Output/Output v1.0/REAL v1.0/REAL_COL_ASIP_1.rda")
 
 sel_cof_chn <- PMMH
 
-pdf(file = "./REAL_COL_ASIP_1_Traceplot_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_COL_ASIP_1_Traceplot_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(1:itn_num, sel_cof_chn[1:itn_num], type = 'l',
      xlab = "Iteration", ylab = "Selection coefficient",
@@ -84,7 +84,7 @@ sel_cof_est <- mean(sel_cof_chn)
 
 sel_cof_hpd <- HPDinterval(as.mcmc(sel_cof_chn), prob = 0.95)
 
-pdf(file = "./REAL_COL_ASIP_1_Posterior_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_COL_ASIP_1_Posterior_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn, breaks = seq(min(sel_cof_chn), max(sel_cof_chn), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
@@ -98,7 +98,7 @@ dev.off()
 ########################################
 
 #' Raw data of Wutke et al. (2016) from 9322 BC (Holocene 9700 BC)
-load("./REAL.rda")
+load("./Data/REAL.rda")
 
 set.seed(1)
 raw_smp <- ASIP
@@ -122,13 +122,13 @@ itn_num <- 2e+04
 system.time(PMMH <- cmprunPMMH(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num))
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, PMMH,
-     file = "./REAL_COL_ASIP_2.rda")
+     file = "./Output/Output v1.0/REAL v1.0/REAL_COL_ASIP_2.rda")
 
-load("./REAL_COL_ASIP_2.rda")
+load("./Output/Output v1.0/REAL v1.0/REAL_COL_ASIP_2.rda")
 
 sel_cof_chn <- PMMH
 
-pdf(file = "./REAL_COL_ASIP_2_Traceplot_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_COL_ASIP_2_Traceplot_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(1:itn_num, sel_cof_chn[1:itn_num], type = 'l',
      xlab = "Iteration", ylab = "Selection coefficient",
@@ -146,7 +146,7 @@ sel_cof_est <- mean(sel_cof_chn)
 
 sel_cof_hpd <- HPDinterval(as.mcmc(sel_cof_chn), prob = 0.95)
 
-pdf(file = "./REAL_COL_ASIP_2_Posterior_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_COL_ASIP_2_Posterior_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn, breaks = seq(min(sel_cof_chn), max(sel_cof_chn), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
@@ -162,7 +162,7 @@ dev.off()
 #' MC1R
 
 #' Raw data of Wutke et al. (2016) from 4300 BC
-load("./REAL.rda")
+load("./Data/REAL.rda")
 
 set.seed(1)
 raw_smp <- MC1R
@@ -186,13 +186,13 @@ itn_num <- 2e+04
 system.time(PMMH <- cmprunPMMH(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num))
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, PMMH,
-     file = "./REAL_COL_MC1R_1.rda")
+     file = "./Output/Output v1.0/REAL v1.0/REAL_COL_MC1R_1.rda")
 
-load("./REAL_COL_MC1R_1.rda")
+load("./Output/Output v1.0/REAL v1.0/REAL_COL_MC1R_1.rda")
 
 sel_cof_chn <- PMMH
 
-pdf(file = "./REAL_COL_MC1R_1_Traceplot_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_COL_MC1R_1_Traceplot_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(1:itn_num, sel_cof_chn[1:itn_num], type = 'l',
      xlab = "Iteration", ylab = "Selection coefficient",
@@ -210,7 +210,7 @@ sel_cof_est <- mean(sel_cof_chn)
 
 sel_cof_hpd <- HPDinterval(as.mcmc(sel_cof_chn), prob = 0.95)
 
-pdf(file = "./REAL_COL_MC1R_1_Posterior_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_COL_MC1R_1_Posterior_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn, breaks = seq(min(sel_cof_chn), max(sel_cof_chn), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
@@ -224,7 +224,7 @@ dev.off()
 ########################################
 
 #' Raw data of Wutke et al. (2016) from 9322 BC (Holocene 9700 BC)
-load("./REAL.rda")
+load("./Data/REAL.rda")
 
 set.seed(1)
 raw_smp <- MC1R
@@ -248,13 +248,13 @@ itn_num <- 2e+04
 system.time(PMMH <- cmprunPMMH(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num))
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, PMMH,
-     file = "./REAL_COL_MC1R_2.rda")
+     file = "./Output/Output v1.0/REAL v1.0/REAL_COL_MC1R_2.rda")
 
-load("./REAL_COL_MC1R_2.rda")
+load("./Output/Output v1.0/REAL v1.0/REAL_COL_MC1R_2.rda")
 
 sel_cof_chn <- PMMH
 
-pdf(file = "./REAL_COL_MC1R_2_Traceplot_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_COL_MC1R_2_Traceplot_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(1:itn_num, sel_cof_chn[1:itn_num], type = 'l',
      xlab = "Iteration", ylab = "Selection coefficient",
@@ -272,7 +272,7 @@ sel_cof_est <- mean(sel_cof_chn)
 
 sel_cof_hpd <- HPDinterval(as.mcmc(sel_cof_chn), prob = 0.95)
 
-pdf(file = "./REAL_COL_MC1R_2_Posterior_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_COL_MC1R_2_Posterior_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn, breaks = seq(min(sel_cof_chn), max(sel_cof_chn), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
@@ -288,7 +288,7 @@ dev.off()
 #' KIT13
 
 #' Raw data of Wutke et al. (2016) from 3645 BC
-load("./REAL.rda")
+load("./Data/REAL.rda")
 
 set.seed(1)
 raw_smp <- KIT13
@@ -312,13 +312,13 @@ itn_num <- 2e+04
 system.time(PMMH <- cmprunPMMH(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num))
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, PMMH,
-     file = "./REAL_PTN_KIT13_1.rda")
+     file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT13_1.rda")
 
-load("./REAL_PTN_KIT13_1.rda")
+load("./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT13_1.rda")
 
 sel_cof_chn <- PMMH
 
-pdf(file = "./REAL_PTN_KIT13_1_Traceplot_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT13_1_Traceplot_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(1:itn_num, sel_cof_chn[1:itn_num], type = 'l',
      xlab = "Iteration", ylab = "Selection coefficient",
@@ -336,7 +336,7 @@ sel_cof_est <- mean(sel_cof_chn)
 
 sel_cof_hpd <- HPDinterval(as.mcmc(sel_cof_chn), prob = 0.95)
 
-pdf(file = "./REAL_PTN_KIT13_1_Posterior_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT13_1_Posterior_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn, breaks = seq(min(sel_cof_chn), max(sel_cof_chn), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
@@ -350,7 +350,7 @@ dev.off()
 ########################################
 
 #' Raw data of Wutke et al. (2016) from 3500 BC (Domestication)
-load("./REAL.rda")
+load("./Data/REAL.rda")
 
 set.seed(1)
 raw_smp <- KIT13
@@ -374,13 +374,13 @@ itn_num <- 2e+04
 system.time(PMMH <- cmprunPMMH(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num))
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, PMMH,
-     file = "./REAL_PTN_KIT13_2.rda")
+     file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT13_2.rda")
 
-load("./REAL_PTN_KIT13_2.rda")
+load("./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT13_2.rda")
 
 sel_cof_chn <- PMMH
 
-pdf(file = "./REAL_PTN_KIT13_2_Traceplot_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT13_2_Traceplot_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(1:itn_num, sel_cof_chn[1:itn_num], type = 'l',
      xlab = "Iteration", ylab = "Selection coefficient",
@@ -398,7 +398,7 @@ sel_cof_est <- mean(sel_cof_chn)
 
 sel_cof_hpd <- HPDinterval(as.mcmc(sel_cof_chn), prob = 0.95)
 
-pdf(file = "./REAL_PTN_KIT13_2_Posterior_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT13_2_Posterior_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn, breaks = seq(min(sel_cof_chn), max(sel_cof_chn), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
@@ -414,7 +414,7 @@ dev.off()
 #' KIT16
 
 #' Raw data of Wutke et al. (2016) from 3500 BC
-load("./REAL.rda")
+load("./Data/REAL.rda")
 
 set.seed(1)
 raw_smp <- KIT16
@@ -438,13 +438,13 @@ itn_num <- 2e+04
 system.time(PMMH <- cmprunPMMH(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num))
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, PMMH,
-     file = "./REAL_PTN_KIT16_1.rda")
+     file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT16_1.rda")
 
-load("./REAL_PTN_KIT16_1.rda")
+load("./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT16_1.rda")
 
 sel_cof_chn <- PMMH
 
-pdf(file = "./REAL_PTN_KIT16_1_Traceplot_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT16_1_Traceplot_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(1:itn_num, sel_cof_chn[1:itn_num], type = 'l',
      xlab = "Iteration", ylab = "Selection coefficient",
@@ -462,7 +462,7 @@ sel_cof_est <- mean(sel_cof_chn)
 
 sel_cof_hpd <- HPDinterval(as.mcmc(sel_cof_chn), prob = 0.95)
 
-pdf(file = "./REAL_PTN_KIT16_1_Posterior_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT16_1_Posterior_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn, breaks = seq(min(sel_cof_chn), max(sel_cof_chn), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
@@ -476,7 +476,7 @@ dev.off()
 ########################################
 
 #' Raw data of Wutke et al. (2016) from 3500 BC (Domestication)
-load("./REAL.rda")
+load("./Data/REAL.rda")
 
 set.seed(1)
 raw_smp <- KIT16
@@ -500,13 +500,13 @@ itn_num <- 2e+04
 system.time(PMMH <- cmprunPMMH(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num))
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, PMMH,
-     file = "./REAL_PTN_KIT16_2.rda")
+     file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT16_2.rda")
 
-load("./REAL_PTN_KIT16_2.rda")
+load("./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT16_2.rda")
 
 sel_cof_chn <- PMMH
 
-pdf(file = "./REAL_PTN_KIT16_2_Traceplot_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT16_2_Traceplot_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(1:itn_num, sel_cof_chn[1:itn_num], type = 'l',
      xlab = "Iteration", ylab = "Selection coefficient",
@@ -524,7 +524,7 @@ sel_cof_est <- mean(sel_cof_chn)
 
 sel_cof_hpd <- HPDinterval(as.mcmc(sel_cof_chn), prob = 0.95)
 
-pdf(file = "./REAL_PTN_KIT16_2_Posterior_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_KIT16_2_Posterior_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn, breaks = seq(min(sel_cof_chn), max(sel_cof_chn), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
@@ -540,7 +540,7 @@ dev.off()
 #' TRPM1
 
 #' Raw data of Wutke et al. (2016) from 14500 BC
-load("./REAL.rda")
+load("./Data/REAL.rda")
 
 set.seed(1)
 raw_smp <- TRPM1
@@ -564,13 +564,13 @@ itn_num <- 2e+04
 system.time(PMMH <- cmprunPMMH(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num))
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, PMMH,
-     file = "./REAL_PTN_TRPM1_1.rda")
+     file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_TRPM1_1.rda")
 
-load("./REAL_PTN_TRPM1_1.rda")
+load("./Output/Output v1.0/REAL v1.0/REAL_PTN_TRPM1_1.rda")
 
 sel_cof_chn <- PMMH
 
-pdf(file = "./REAL_PTN_TRPM1_1_Traceplot_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_TRPM1_1_Traceplot_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(1:itn_num, sel_cof_chn[1:itn_num], type = 'l',
      xlab = "Iteration", ylab = "Selection coefficient",
@@ -588,7 +588,7 @@ sel_cof_est <- mean(sel_cof_chn)
 
 sel_cof_hpd <- HPDinterval(as.mcmc(sel_cof_chn), prob = 0.95)
 
-pdf(file = "./REAL_PTN_TRPM1_1_Posterior_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_TRPM1_1_Posterior_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn, breaks = seq(min(sel_cof_chn), max(sel_cof_chn), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
@@ -602,7 +602,7 @@ dev.off()
 ########################################
 
 #' Raw data of Wutke et al. (2016) from 9322 BC (Holocene 9700 BC)
-load("./REAL.rda")
+load("./Data/REAL.rda")
 
 set.seed(1)
 raw_smp <- TRPM1
@@ -626,13 +626,13 @@ itn_num <- 2e+04
 system.time(PMMH <- cmprunPMMH(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num))
 
 save(sel_cof, dom_par, pop_siz, raw_smp, ptn_num, pcl_num, itn_num, PMMH,
-     file = "./REAL_PTN_TRPM1_2.rda")
+     file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_TRPM1_2.rda")
 
-load("./REAL_PTN_TRPM1_2.rda")
+load("./Output/Output v1.0/REAL v1.0/REAL_PTN_TRPM1_2.rda")
 
 sel_cof_chn <- PMMH
 
-pdf(file = "./REAL_PTN_TRPM1_2_Traceplot_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_TRPM1_2_Traceplot_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(1:itn_num, sel_cof_chn[1:itn_num], type = 'l',
      xlab = "Iteration", ylab = "Selection coefficient",
@@ -650,7 +650,7 @@ sel_cof_est <- mean(sel_cof_chn)
 
 sel_cof_hpd <- HPDinterval(as.mcmc(sel_cof_chn), prob = 0.95)
 
-pdf(file = "./REAL_PTN_TRPM1_2_Posterior_SelCoeff.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/REAL v1.0/REAL_PTN_TRPM1_2_Posterior_SelCoeff.pdf", width = 12, height = 6)
 par(mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn, breaks = seq(min(sel_cof_chn), max(sel_cof_chn), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
