@@ -217,7 +217,7 @@ arma::imat imputeSample_arma(const arma::imat& raw_smp, const arma::dcolvec& sel
         smp_cnt(indx(0), i) = 1;
       }
     }
-  } else if (arma::all(smp_gen < evt_gen)) {
+  } else if (arma::all(smp_gen <= evt_gen)) {
     fts_mat = calculateFitnessMat_arma(sel_cof(0), dom_par);
     for (arma::uword i = 0; i < smp_gen.n_elem; i++) {
       if (any(mis_cnt.col(i) > 0)) {
