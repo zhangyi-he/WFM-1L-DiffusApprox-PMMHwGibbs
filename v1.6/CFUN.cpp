@@ -212,7 +212,7 @@ arma::imat imputeSample_arma(const arma::dmat& raw_smp, const arma::dcolvec& sel
       arma::ucolvec indx = RcppArmadillo::sample(elem, 1, TRUE, prob);
       smp_cnt(indx(0), i) = 1;
     }
-  } else if (arma::all(smp_gen < evt_gen)) {
+  } else if (arma::all(smp_gen <= evt_gen)) {
     fts_mat = calculateFitnessMat_arma(sel_cof(0), dom_par);
     for (arma::uword i = 0; i < smp_gen.n_elem; i++) {
       arma::dcolvec prob = calculateGenoFrq_arma(fts_mat, mut_pth(smp_idx(i)));
