@@ -607,7 +607,7 @@ arma::dmat runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, con
 
     if (arma::any(sel_cof_chn.col(i) < -1)) {
       sel_cof_chn.col(i) = sel_cof_chn.col(i - 1);
-      log_lik(1) = log_lik(0);
+      // log_lik(1) = log_lik(0);
       // apt_cnt = apt_cnt + 0;
       cout << "acceptance: " << apt_cnt / i << endl;
     } else {
@@ -623,7 +623,7 @@ arma::dmat runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, con
 
       if (arma::randu() > exp(log_lik(1) - log_lik(0))) {
         sel_cof_chn.col(i) = sel_cof_chn.col(i - 1);
-        log_lik(1) = log_lik(0);
+        // log_lik(1) = log_lik(0);
         // apt_cnt = apt_cnt + 0;
         cout << "acceptance: " << apt_cnt / i << endl;
       } else {
@@ -679,7 +679,7 @@ arma::dmat runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par
     alpha = 0;
     if (arma::any(sel_cof_chn.col(i) < -1)) {
       sel_cof_chn.col(i) = sel_cof_chn.col(i - 1);
-      log_lik(1) = log_lik(0);
+      // log_lik(1) = log_lik(0);
       // apt_cnt = apt_cnt + 0;
       cout << "acceptance: " << apt_cnt / i << endl;
     } else {
@@ -697,7 +697,7 @@ arma::dmat runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par
       alpha = (alpha > 1) ? 1 : alpha;
       if (arma::randu() > alpha) {
         sel_cof_chn.col(i) = sel_cof_chn.col(i - 1);
-        log_lik(1) = log_lik(0);
+        // log_lik(1) = log_lik(0);
         // apt_cnt = apt_cnt + 0;
         cout << "acceptance: " << apt_cnt / i << endl;
       } else {
