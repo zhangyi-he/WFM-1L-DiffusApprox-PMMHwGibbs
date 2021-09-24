@@ -483,7 +483,7 @@ arma::drowvec runPMMH_arma(const double& sel_cof, const double& dom_par, const a
 
     if (sel_cof_chn(i) < -1) {
       sel_cof_chn(i) = sel_cof_chn(i - 1);
-      log_lik(1) = log_lik(0);
+      // log_lik(1) = log_lik(0);
       // apt_cnt = apt_cnt + 0;
       cout << "acceptance: " << apt_cnt / i << endl;
     } else {
@@ -499,7 +499,7 @@ arma::drowvec runPMMH_arma(const double& sel_cof, const double& dom_par, const a
 
       if (arma::randu() > exp(log_lik(1) - log_lik(0))) {
         sel_cof_chn(i) = sel_cof_chn(i - 1);
-        log_lik(1) = log_lik(0);
+        // log_lik(1) = log_lik(0);
         // apt_cnt = apt_cnt + 0;
         cout << "acceptance: " << apt_cnt / i << endl;
       } else {
