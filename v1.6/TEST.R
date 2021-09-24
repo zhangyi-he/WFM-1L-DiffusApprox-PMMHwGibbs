@@ -217,7 +217,7 @@ points(smp_gen, smp_frq[3, ], col = 'red', pch = 17, cex = 1)
 ################################################################################
 
 #' Generate a simulated dataset under the Wright-Fisher model
-test_seed <- 7
+test_seed <- 1
 set.seed(test_seed)
 
 model <- "WFM"
@@ -514,7 +514,7 @@ for (i in 1:dim(frq_pth_chn)[2]) {
 
 pdf(file = "./Output/Output v1.0/TEST v1.6/TEST_PMMH_Posterior_Traj.pdf", width = 12, height = 6)
 par(mar = c(5.1, 5.1, 4.1, 1.1), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
-plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_chn, pop_frq), max(frq_pth_chn, pop_frq)),
+plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_chn, sim_HMM_WFM$mut_frq), max(frq_pth_chn, sim_HMM_WFM$mut_frq)),
      xlab = "Generation", ylab = "Allele frequency",
      main = "Posterior for underlying trajectory of mutant allele")
 for (i in 1:dim(frq_pth_chn)[1]) {
@@ -669,7 +669,7 @@ for (i in 1:dim(frq_pth_chn)[2]) {
 
 pdf(file = "./Output/Output v1.0/TEST v1.6/TEST_AdaptPMMH_Posterior_Traj.pdf", width = 12, height = 6)
 par(mar = c(5.1, 5.1, 4.1, 1.1), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
-plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_chn, pop_frq), max(frq_pth_chn, pop_frq)),
+plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_chn, sim_HMM_WFM$mut_frq), max(frq_pth_chn, sim_HMM_WFM$mut_frq)),
      xlab = "Generation", ylab = "Allele frequency",
      main = "Posterior for underlying trajectory of mutant allele")
 for (i in 1:dim(frq_pth_chn)[1]) {
@@ -796,7 +796,7 @@ frq_pth_hpd <- BayesianProcedure$frq_pth_hpd
 
 pdf(file = "./Output/Output v1.0/TEST v1.6/TEST_BayesProc_Posterior_Traj.pdf", width = 12, height = 6)
 par(mar = c(5.1, 5.1, 4.1, 1.1), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
-plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_chn, pop_frq), max(frq_pth_chn, pop_frq)),
+plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_chn, sim_HMM_WFM$mut_frq), max(frq_pth_chn, sim_HMM_WFM$mut_frq)),
      xlab = "Generation", ylab = "Allele frequency",
      main = "Posterior for underlying trajectory of mutant allele")
 for (i in 1:dim(frq_pth_chn)[1]) {
