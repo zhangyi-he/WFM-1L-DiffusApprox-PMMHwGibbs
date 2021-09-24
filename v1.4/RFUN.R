@@ -33,7 +33,7 @@ library("compiler")
 #enableJIT(1)
 
 # call C++ functions
-sourceCpp("./Code/Code v1.0/Code v1.4/CFUN.cpp")
+sourceCpp("./CFUN.cpp")
 
 ################################################################################
 
