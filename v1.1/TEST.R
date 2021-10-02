@@ -8,6 +8,9 @@
 #' Input: called genotypes
 #' Output: posteriors for the selection coefficient
 
+# set the directory
+setwd("~/Dropbox/Jeffery He/iResearch/Publications/2019/HE2021-WFM-1L-DiffusApprox-PMMHwGibbs1-MolEcolResour")
+
 #install.packages("RColorBrewer")
 library("RColorBrewer")
 
@@ -196,7 +199,7 @@ points(smp_gen, smp_frq[3, ], col = 'red', pch = 17, cex = 1)
 ################################################################################
 
 #' Generate a simulated dataset under the Wright-Fisher model
-test_seed <- 1
+test_seed <- 5
 set.seed(test_seed)
 
 model <- "WFM"
