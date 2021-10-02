@@ -1,7 +1,7 @@
 #' @title Estimating selection coefficients and testing their changes from ancient DNA data
 #' @author Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu, Zhangyi He
 
-#' version 1.6
+#' version 1.5
 #' Phenotypes controlled by a single gene
 #' Non-constant natural selection and non-constant demographic histories
 
@@ -35,7 +35,7 @@ library("compiler")
 #enableJIT(1)
 
 # call C++ functions
-sourceCpp("./Code/Code v1.0/Code v1.6/CFUN.cpp")
+sourceCpp("./CFUN.cpp")
 
 ################################################################################
 
