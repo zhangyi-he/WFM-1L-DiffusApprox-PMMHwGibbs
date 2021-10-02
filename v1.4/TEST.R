@@ -10,6 +10,9 @@
 #' Input: called genotypes
 #' Output: posteriors for the selection coefficient and the genotype frequency trajectories of the population
 
+# set the directory
+setwd("~/Dropbox/Jeffery He/iResearch/Publications/2019/HE2021-WFM-1L-DiffusApprox-PMMHwGibbs1-MolEcolResour")
+
 #install.packages("RColorBrewer")
 library("RColorBrewer")
 
@@ -206,7 +209,7 @@ points(smp_gen, smp_frq[3, ], col = 'red', pch = 17, cex = 1)
 ################################################################################
 
 #' Generate a simulated dataset under the Wright-Fisher model
-test_seed <- 1
+test_seed <- 5
 set.seed(test_seed)
 
 model <- "WFM"
@@ -491,7 +494,7 @@ frq_pth_est <- colMeans(frq_pth_chn)
 
 frq_pth_hpd <- matrix(NA, nrow = 2, ncol = dim(frq_pth_chn)[2])
 for (i in 1:dim(frq_pth_chn)[2]) {
-   frq_pth_hpd[, i] <- HPDinterval(as.mcmc(frq_pth_chn[, i]), prob = 0.95)
+  frq_pth_hpd[, i] <- HPDinterval(as.mcmc(frq_pth_chn[, i]), prob = 0.95)
 }
 
 pdf(file = "./TEST_PMMH_Posterior_Traj.pdf", width = 12, height = 6)
@@ -500,7 +503,7 @@ plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_c
      xlab = "Generation", ylab = "Allele frequency",
      main = "Posterior for underlying trajectory of mutant allele")
 for (i in 1:dim(frq_pth_chn)[1]) {
-   lines(min(smp_gen):max(smp_gen), frq_pth_chn[i, ], col = 'grey', lty = 1, lwd = 2)
+  lines(min(smp_gen):max(smp_gen), frq_pth_chn[i, ], col = 'grey', lty = 1, lwd = 2)
 }
 lines(min(smp_gen):max(smp_gen), sim_HMM_WFM$mut_frq, col = 'red', lty = 1, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_est, col = 'black', lty = 2, lwd = 2)
@@ -624,7 +627,7 @@ frq_pth_est <- colMeans(frq_pth_chn)
 
 frq_pth_hpd <- matrix(NA, nrow = 2, ncol = dim(frq_pth_chn)[2])
 for (i in 1:dim(frq_pth_chn)[2]) {
-   frq_pth_hpd[, i] <- HPDinterval(as.mcmc(frq_pth_chn[, i]), prob = 0.95)
+  frq_pth_hpd[, i] <- HPDinterval(as.mcmc(frq_pth_chn[, i]), prob = 0.95)
 }
 
 pdf(file = "./TEST_AdaptPMMH_Posterior_Traj.pdf", width = 12, height = 6)
@@ -633,7 +636,7 @@ plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_c
      xlab = "Generation", ylab = "Allele frequency",
      main = "Posterior for underlying trajectory of mutant allele")
 for (i in 1:dim(frq_pth_chn)[1]) {
-   lines(min(smp_gen):max(smp_gen), frq_pth_chn[i, ], col = 'grey', lty = 1, lwd = 2)
+  lines(min(smp_gen):max(smp_gen), frq_pth_chn[i, ], col = 'grey', lty = 1, lwd = 2)
 }
 lines(min(smp_gen):max(smp_gen), sim_HMM_WFM$mut_frq, col = 'red', lty = 1, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_est, col = 'black', lty = 2, lwd = 2)
@@ -739,7 +742,7 @@ plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_c
      xlab = "Generation", ylab = "Allele frequency",
      main = "Posterior for underlying trajectory of mutant allele")
 for (i in 1:dim(frq_pth_chn)[1]) {
-   lines(min(smp_gen):max(smp_gen), frq_pth_chn[i, ], col = 'grey', lty = 1, lwd = 2)
+  lines(min(smp_gen):max(smp_gen), frq_pth_chn[i, ], col = 'grey', lty = 1, lwd = 2)
 }
 lines(min(smp_gen):max(smp_gen), sim_HMM_WFM$mut_frq, col = 'red', lty = 1, lwd = 2)
 lines(min(smp_gen):max(smp_gen), frq_pth_est, col = 'black', lty = 2, lwd = 2)
