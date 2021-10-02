@@ -12,6 +12,9 @@
 
 #' Horse base coat colours (ASIP & MC1R) and white spotting patterns (KIT13 & KIT16 & TRMP1)
 
+# set the directory
+setwd("~/Dropbox/Jeffery He/iResearch/Publications/2019/HE2021-WFM-1L-DiffusApprox-PMMHwGibbs1-MolEcolResour")
+
 #install.packages("RColorBrewer")
 library("RColorBrewer")
 
@@ -711,7 +714,7 @@ raw_smp <- raw_smp[order(raw_smp$age_mean), ]
 rownames(raw_smp) <- NULL
 
 sel_cof <- c(0e+00, 0e+00)
-dom_par <- 1e+00
+dom_par <- 5e-01
 pop_siz <- pop_siz[min(raw_smp$age_mean - int_gen + 1):max(raw_smp$age_mean - int_gen + 1)]
 ref_siz <- tail(pop_siz, n = 1)
 evt_gen <- round((400 - 2000) / 8) # 400 AD (the Middle Ages)
@@ -820,7 +823,7 @@ raw_smp <- raw_smp[order(raw_smp$age_mean), ]
 rownames(raw_smp) <- NULL
 
 sel_cof <- c(0e+00, 0e+00)
-dom_par <- 1e+00
+dom_par <- 5e-01
 pop_siz <- pop_siz[min(raw_smp$age_mean - int_gen + 1):max(raw_smp$age_mean - int_gen + 1)]
 ref_siz <- tail(pop_siz, n = 1)
 evt_gen <- round((400 - 2000) / 8) # 400 AD (the Middle Ages)
@@ -931,7 +934,7 @@ raw_smp <- raw_smp[order(raw_smp$age_mean), ]
 rownames(raw_smp) <- NULL
 
 sel_cof <- c(0e+00, 0e+00)
-dom_par <- 1e+00
+dom_par <- 5e-01
 pop_siz <- pop_siz[min(raw_smp$age_mean - int_gen + 1):max(raw_smp$age_mean - int_gen + 1)]
 ref_siz <- tail(pop_siz, n = 1)
 evt_gen <- round((-3500 - 2000) / 8) # 3500 BC (domestication)
@@ -1040,7 +1043,7 @@ raw_smp <- raw_smp[order(raw_smp$age_mean), ]
 rownames(raw_smp) <- NULL
 
 sel_cof <- c(0e+00, 0e+00)
-dom_par <- 1e+00
+dom_par <- 5e-01
 pop_siz <- pop_siz[min(raw_smp$age_mean - int_gen + 1):max(raw_smp$age_mean - int_gen + 1)]
 ref_siz <- tail(pop_siz, n = 1)
 evt_gen <- round((-1600 - 2000) / 8) # 1600 BC (the middle/late Bronze Age)
@@ -1149,7 +1152,7 @@ raw_smp <- raw_smp[order(raw_smp$age_mean), ]
 rownames(raw_smp) <- NULL
 
 sel_cof <- c(0e+00, 0e+00)
-dom_par <- 1e+00
+dom_par <- 5e-01
 pop_siz <- pop_siz[min(raw_smp$age_mean - int_gen + 1):max(raw_smp$age_mean - int_gen + 1)]
 ref_siz <- tail(pop_siz, n = 1)
 evt_gen <- round((-3500 - 2000) / 8) # 3500 BC (domestication)
@@ -1258,7 +1261,7 @@ raw_smp <- raw_smp[order(raw_smp$age_mean), ]
 rownames(raw_smp) <- NULL
 
 sel_cof <- c(0e+00, 0e+00)
-dom_par <- 1e+00
+dom_par <- 5e-01
 pop_siz <- pop_siz[min(raw_smp$age_mean - int_gen + 1):max(raw_smp$age_mean - int_gen + 1)]
 ref_siz <- tail(pop_siz, n = 1)
 evt_gen <- round((-1600 - 2000) / 8) # 1600 BC (the middle/late Bronze Age)
