@@ -206,7 +206,8 @@ arma::imat groupSample_arma(const arma::imat& raw_smp, const int& evt_gen) {
   grp_smp.row(1) = smp_siz;
   grp_smp.rows(2, 4) = smp_cnt;
 
-  arma::icolvec evt_smp = {evt_gen, 0, 0, 0, 0};
+  arma::icolvec evt_smp = arma::zeros<arma::icolvec>(5);
+  evt_smp(0) = evt_gen;
   if (arma::any(smp_gen > evt_gen)) {
     grp_smp.insert_cols(arma::min(arma::find(smp_gen > evt_gen)), evt_smp);
   } else {
