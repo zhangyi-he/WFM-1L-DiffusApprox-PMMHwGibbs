@@ -466,6 +466,14 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
     }
   }
 
+  if (smp_gen(evt_ind) != smp_gen(evt_ind - 1)) {
+    wght.shed_col(evt_ind);
+    mut_frq_pre.shed_col(evt_ind);
+    mut_frq_pst.shed_col(evt_ind);
+    gen_frq_pre.shed_slice(evt_ind);
+    gen_frq_pst.shed_slice(evt_ind);
+  }
+
   return List::create(Named("lik", lik),
                       Named("wght", wght),
                       Named("mut_frq_pth", mut_frq_pth),
