@@ -692,7 +692,7 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
   cout << "iteration: " << 1 << endl;
 
   frq_pth.fill(0.5);
-  arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof, dom_par, evt_gen, frq_pth);
+  arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof_chn.col(0), dom_par, evt_gen, frq_pth);
   imp_smp_chn.slice(0) = imp_smp.rows(1, 3);
 
   arma::imat grp_smp = groupSample_arma(imp_smp, evt_gen);
@@ -786,7 +786,7 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
   cout << "iteration: " << 1 << endl;
 
   frq_pth.fill(0.5);
-  arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof, dom_par, evt_gen, frq_pth);
+  arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof_chn.col(0), dom_par, evt_gen, frq_pth);
   imp_smp_chn.slice(0) = imp_smp.rows(1, 3);
 
   arma::imat grp_smp = groupSample_arma(imp_smp, evt_gen);
