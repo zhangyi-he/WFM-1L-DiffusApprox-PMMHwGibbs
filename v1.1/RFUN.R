@@ -41,8 +41,8 @@ sourceCpp("./CFUN.cpp")
 #' @param dom_par the dominance parameter
 #' @param pop_siz the size of the horse population (non-constant)
 #' @param int_frq the initial mutant allele frequency of the population
-#' @param int_gen the generation of the simulated mutant allele frequency trajectory started
-#' @param lst_gen the generation of the simulated mutant allele frequency trajectory ended
+#' @param int_gen the generation that the simulated mutant allele frequency trajectory started
+#' @param lst_gen the generation that the simulated mutant allele frequency trajectory ended
 
 #' Standard version
 simulateWFM <- function(sel_cof, dom_par, pop_siz, int_frq, int_gen, lst_gen) {
@@ -67,8 +67,8 @@ cmpsimulateWFM <- cmpfun(simulateWFM)
 #' @param pop_siz the size of the horse population (non-constant)
 #' @param ref_siz the reference size of the horse population
 #' @param int_frq the initial mutant allele frequency of the population
-#' @param int_gen the generation of the simulated mutant allele frequency trajectory started
-#' @param lst_gen the generation of the simulated mutant allele frequency trajectory ended
+#' @param int_gen the generation that the simulated mutant allele frequency trajectory started
+#' @param lst_gen the generation that the simulated mutant allele frequency trajectory ended
 #' @param ptn_num the number of subintervals divided per generation in the Euler-Maruyama method
 #' @param dat_aug = TRUE/FALSE (return the simulated sample trajectory with data augmentation or not)
 
