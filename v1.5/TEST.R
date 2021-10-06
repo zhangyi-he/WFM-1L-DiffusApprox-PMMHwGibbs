@@ -42,8 +42,8 @@ source("./RFUN.R")
 #' @param pop_siz the size of the horse population (non-constant)
 #' @param int_frq the initial mutant allele frequency of the population
 #' @param evt_gen the generation that the event of interest occurred
-#' @param int_gen the generation of the simulated mutant allele frequency trajectory started
-#' @param lst_gen the generation of the simulated mutant allele frequency trajectory ended
+#' @param int_gen the generation that the simulated mutant allele frequency trajectory started
+#' @param lst_gen the generation that the simulated mutant allele frequency trajectory ended
 
 sel_cof <- c(0e+00, 1e-02)
 dom_par <- 0e+00
@@ -70,8 +70,8 @@ plot(k, frq_pth, type = 'l', lwd = 1.5,
 #' @param ref_siz the reference size of the horse population
 #' @param int_frq the initial mutant allele frequency of the population
 #' @param evt_gen the generation that the event of interest occurred
-#' @param int_gen the generation of the simulated mutant allele frequency trajectory started
-#' @param lst_gen the generation of the simulated mutant allele frequency trajectory ended
+#' @param int_gen the generation that the simulated mutant allele frequency trajectory started
+#' @param lst_gen the generation that the simulated mutant allele frequency trajectory ended
 #' @param ptn_num the number of subintervals divided per generation in the Euler-Maruyama method
 #' @param dat_aug = TRUE/FALSE (return the simulated sample trajectory with data augmentation or not)
 
