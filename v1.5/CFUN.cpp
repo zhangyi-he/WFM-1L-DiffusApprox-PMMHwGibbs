@@ -189,9 +189,9 @@ double calculateEmissionProb_arma(const arma::icolvec& smp_cnt, const int& smp_s
   return prob;
 }
 
-// Impute the missing genotypes with the genotype frequency trajectories of the underlying population
+// Determine the genotype of the sample
 // [[Rcpp::export]]
-arma::imat imputeSample_arma(const arma::dmat& raw_smp, const arma::dcolvec& sel_cof, const double& dom_par, const int& evt_gen, const arma::drowvec& mut_pth) {
+arma::imat determineGeno_arma(const arma::dmat& raw_smp, const arma::dcolvec& sel_cof, const double& dom_par, const int& evt_gen, const arma::drowvec& mut_pth) {
   // ensure RNG gets set/reset
   RNGScope scope;
 
@@ -252,9 +252,9 @@ arma::imat imputeSample_arma(const arma::dmat& raw_smp, const arma::dcolvec& sel
   return imp_smp;
 }
 
-// Combine the samples with the event (treated as a pseudo sample with 0 sample size and 0 sample count)
+// Group the genotype of the sample (treat the event as a pseudo sample with 0 sample size and 0 sample count)
 // [[Rcpp::export]]
-arma::imat groupSample_arma(const arma::imat& imp_smp, const int& evt_gen) {
+arma::imat groupGeno_arma(const arma::imat& imp_smp, const int& evt_gen) {
   // ensure RNG gets set/reset
   RNGScope scope;
 
@@ -303,9 +303,9 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
   // ensure RNG gets set/reset
   RNGScope scope;
 
-  arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof, dom_par, evt_gen, mut_pth);
+  arma::imat imp_smp = determineGeno_arma(raw_smp, sel_cof, dom_par, evt_gen, mut_pth);
 
-  arma::imat grp_smp = groupSample_arma(imp_smp, evt_gen);
+  arma::imat grp_smp = groupGeno_arma(imp_smp, evt_gen);
   arma::irowvec smp_gen = grp_smp.row(0);
   arma::irowvec smp_siz = grp_smp.row(1);
   arma::imat smp_cnt = grp_smp.rows(2, 4);
@@ -338,9 +338,9 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
   }
 
   if (arma::sum(wght_tmp) > 0) {
-    arma::dcolvec prob = arma::normalise(wght_tmp, 1);
+    // arma::dcolvec prob = arma::normalise(wght_tmp, 1);
     arma::ucolvec elem = arma::linspace<arma::ucolvec>(0, pcl_num - 1, pcl_num);
-    arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, prob);
+    arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, wght_tmp);
 
     lik = lik * arma::mean(wght_tmp);
     wght.col(0) = wght_tmp;
@@ -379,9 +379,9 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
     }
 
     if (arma::sum(wght_tmp) > 0) {
-      arma::dcolvec prob = arma::normalise(wght_tmp, 1);
+      // arma::dcolvec prob = arma::normalise(wght_tmp, 1);
       arma::ucolvec elem = arma::linspace<arma::ucolvec>(0, pcl_num - 1, pcl_num);
-      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, prob);
+      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, wght_tmp);
 
       lik = lik * arma::mean(wght_tmp);
       wght.col(k) = wght_tmp;
@@ -444,9 +444,9 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
     }
 
     if (arma::sum(wght_tmp) > 0) {
-      arma::dcolvec prob = arma::normalise(wght_tmp, 1);
+      // arma::dcolvec prob = arma::normalise(wght_tmp, 1);
       arma::ucolvec elem = arma::linspace<arma::ucolvec>(0, pcl_num - 1, pcl_num);
-      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, prob);
+      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, wght_tmp);
 
       lik = lik * arma::mean(wght_tmp);
       wght.col(k) = wght_tmp;
@@ -514,9 +514,9 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
 
   if (arma::mean(wght) > 0) {
     log_lik = log_lik + log(arma::mean(wght));
-    arma::dcolvec prob = arma::normalise(wght, 1);
+    // arma::dcolvec prob = arma::normalise(wght, 1);
     arma::ucolvec elem = arma::linspace<arma::ucolvec>(0, pcl_num - 1, pcl_num);
-    arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, prob);
+    arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, wght);
     mut_frq_pst = mut_frq_pre.elem(indx);
   } else {
     log_lik = -(arma::datum::inf);
@@ -536,9 +536,9 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
 
     if (arma::mean(wght) > 0) {
       log_lik = log_lik + log(arma::mean(wght));
-      arma::dcolvec prob = arma::normalise(wght, 1);
+      // arma::dcolvec prob = arma::normalise(wght, 1);
       arma::ucolvec elem = arma::linspace<arma::ucolvec>(0, pcl_num - 1, pcl_num);
-      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, prob);
+      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, wght);
       mut_frq_pst = mut_frq_pre.elem(indx);
       mut_frq_pth = mut_frq_pth.rows(indx);
     } else {
@@ -571,9 +571,9 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
 
     if (arma::mean(wght) > 0) {
       log_lik = log_lik + log(arma::mean(wght));
-      arma::dcolvec prob = arma::normalise(wght, 1);
+      // arma::dcolvec prob = arma::normalise(wght, 1);
       arma::ucolvec elem = arma::linspace<arma::ucolvec>(0, pcl_num - 1, pcl_num);
-      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, prob);
+      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, wght);
       mut_frq_pst = mut_frq_pre.elem(indx);
       mut_frq_pth = mut_frq_pth.rows(indx);
     } else {
@@ -594,9 +594,9 @@ List calculateOptimalParticleNum_arma(const arma::dcolvec& sel_cof, const double
   // ensure RNG gets set/reset
   RNGScope scope;
 
-  arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof, dom_par, evt_gen, mut_pth);
+  arma::imat imp_smp = determineGeno_arma(raw_smp, sel_cof, dom_par, evt_gen, mut_pth);
 
-  arma::imat grp_smp = groupSample_arma(imp_smp, evt_gen);
+  arma::imat grp_smp = groupGeno_arma(imp_smp, evt_gen);
   arma::irowvec smp_gen = grp_smp.row(0);
   arma::irowvec smp_siz = grp_smp.row(1);
   arma::imat smp_cnt = grp_smp.rows(2, 4);
@@ -692,10 +692,10 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
   cout << "iteration: " << 1 << endl;
 
   frq_pth.fill(0.5);
-  arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof_chn.col(0), dom_par, evt_gen, frq_pth);
+  arma::imat imp_smp = determineGeno_arma(raw_smp, sel_cof_chn.col(0), dom_par, evt_gen, frq_pth);
   imp_smp_chn.slice(0) = imp_smp.rows(1, 3);
 
-  arma::imat grp_smp = groupSample_arma(imp_smp, evt_gen);
+  arma::imat grp_smp = groupGeno_arma(imp_smp, evt_gen);
   arma::irowvec smp_gen = grp_smp.row(0);
   arma::irowvec smp_siz = grp_smp.row(1);
   arma::imat smp_cnt = grp_smp.rows(2, 4);
@@ -713,10 +713,10 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
   for (arma::uword i = 1; i < itn_num; i++) {
     cout << "iteration: " << i + 1 << endl;
 
-    imp_smp = imputeSample_arma(raw_smp, sel_cof_chn.col(i - 1), dom_par, evt_gen, frq_pth_chn.row(i - 1));
+    imp_smp = determineGeno_arma(raw_smp, sel_cof_chn.col(i - 1), dom_par, evt_gen, frq_pth_chn.row(i - 1));
     imp_smp_chn.slice(i) = imp_smp.rows(1, 3);
 
-    grp_smp = groupSample_arma(imp_smp, evt_gen);
+    grp_smp = groupGeno_arma(imp_smp, evt_gen);
     smp_gen = grp_smp.row(0);
     smp_siz = grp_smp.row(1);
     smp_cnt = grp_smp.rows(2, 4);
@@ -786,10 +786,10 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
   cout << "iteration: " << 1 << endl;
 
   frq_pth.fill(0.5);
-  arma::imat imp_smp = imputeSample_arma(raw_smp, sel_cof_chn.col(0), dom_par, evt_gen, frq_pth);
+  arma::imat imp_smp = determineGeno_arma(raw_smp, sel_cof_chn.col(0), dom_par, evt_gen, frq_pth);
   imp_smp_chn.slice(0) = imp_smp.rows(1, 3);
 
-  arma::imat grp_smp = groupSample_arma(imp_smp, evt_gen);
+  arma::imat grp_smp = groupGeno_arma(imp_smp, evt_gen);
   arma::irowvec smp_gen = grp_smp.row(0);
   arma::irowvec smp_siz = grp_smp.row(1);
   arma::imat smp_cnt = grp_smp.rows(2, 4);
@@ -808,10 +808,10 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
   for (arma::uword i = 1; i < itn_num; i++) {
     cout << "iteration: " << i + 1 << endl;
 
-    imp_smp = imputeSample_arma(raw_smp, sel_cof_chn.col(i - 1), dom_par, evt_gen, frq_pth_chn.row(i - 1));
+    imp_smp = determineGeno_arma(raw_smp, sel_cof_chn.col(i - 1), dom_par, evt_gen, frq_pth_chn.row(i - 1));
     imp_smp_chn.slice(i) = imp_smp.rows(1, 3);
 
-    grp_smp = groupSample_arma(imp_smp, evt_gen);
+    grp_smp = groupGeno_arma(imp_smp, evt_gen);
     smp_gen = grp_smp.row(0);
     smp_siz = grp_smp.row(1);
     smp_cnt = grp_smp.rows(2, 4);
