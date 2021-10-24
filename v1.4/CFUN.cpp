@@ -189,9 +189,9 @@ double calculateEmissionProb_arma(const arma::icolvec& smp_cnt, const int& smp_s
   return prob;
 }
 
-// Group the samples and combine the event (treated as a pseudo sample with 0 sample size and 0 sample count)
+// Group the genotype of the sample (treat the event as a pseudo sample with 0 sample size and 0 sample count)
 // [[Rcpp::export]]
-arma::imat groupSample_arma(const arma::imat& raw_smp, const int& evt_gen) {
+arma::imat groupGeno_arma(const arma::imat& raw_smp, const int& evt_gen) {
   // ensure RNG gets set/reset
   RNGScope scope;
 
@@ -229,7 +229,7 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
   // ensure RNG gets set/reset
   RNGScope scope;
 
-  arma::imat grp_smp = groupSample_arma(raw_smp, evt_gen);
+  arma::imat grp_smp = groupGeno_arma(raw_smp, evt_gen);
   arma::irowvec smp_gen = grp_smp.row(0);
   arma::irowvec smp_siz = grp_smp.row(1);
   arma::imat smp_cnt = grp_smp.rows(2, 4);
@@ -261,9 +261,9 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
   }
 
   if (arma::sum(wght_tmp) > 0) {
-    arma::dcolvec prob = arma::normalise(wght_tmp, 1);
+    // arma::dcolvec prob = arma::normalise(wght_tmp, 1);
     arma::ucolvec elem = arma::linspace<arma::ucolvec>(0, pcl_num - 1, pcl_num);
-    arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, prob);
+    arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, wght_tmp);
 
     lik = lik * arma::mean(wght_tmp);
     wght.col(0) = wght_tmp;
@@ -302,9 +302,9 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
     }
 
     if (arma::sum(wght_tmp) > 0) {
-      arma::dcolvec prob = arma::normalise(wght_tmp, 1);
+      // arma::dcolvec prob = arma::normalise(wght_tmp, 1);
       arma::ucolvec elem = arma::linspace<arma::ucolvec>(0, pcl_num - 1, pcl_num);
-      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, prob);
+      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, wght_tmp);
 
       lik = lik * arma::mean(wght_tmp);
       wght.col(k) = wght_tmp;
@@ -367,9 +367,9 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
     }
 
     if (arma::sum(wght_tmp) > 0) {
-      arma::dcolvec prob = arma::normalise(wght_tmp, 1);
+      // arma::dcolvec prob = arma::normalise(wght_tmp, 1);
       arma::ucolvec elem = arma::linspace<arma::ucolvec>(0, pcl_num - 1, pcl_num);
-      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, prob);
+      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, wght_tmp);
 
       lik = lik * arma::mean(wght_tmp);
       wght.col(k) = wght_tmp;
@@ -437,9 +437,9 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
 
   if (arma::mean(wght) > 0) {
     log_lik = log_lik + log(arma::mean(wght));
-    arma::dcolvec prob = arma::normalise(wght, 1);
+    // arma::dcolvec prob = arma::normalise(wght, 1);
     arma::ucolvec elem = arma::linspace<arma::ucolvec>(0, pcl_num - 1, pcl_num);
-    arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, prob);
+    arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, wght);
     mut_frq_pst = mut_frq_pre.elem(indx);
   } else {
     log_lik = -(arma::datum::inf);
@@ -459,9 +459,9 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
 
     if (arma::mean(wght) > 0) {
       log_lik = log_lik + log(arma::mean(wght));
-      arma::dcolvec prob = arma::normalise(wght, 1);
+      // arma::dcolvec prob = arma::normalise(wght, 1);
       arma::ucolvec elem = arma::linspace<arma::ucolvec>(0, pcl_num - 1, pcl_num);
-      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, prob);
+      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, wght);
       mut_frq_pst = mut_frq_pre.elem(indx);
       mut_frq_pth = mut_frq_pth.rows(indx);
     } else {
@@ -494,9 +494,9 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
 
     if (arma::mean(wght) > 0) {
       log_lik = log_lik + log(arma::mean(wght));
-      arma::dcolvec prob = arma::normalise(wght, 1);
+      // arma::dcolvec prob = arma::normalise(wght, 1);
       arma::ucolvec elem = arma::linspace<arma::ucolvec>(0, pcl_num - 1, pcl_num);
-      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, prob);
+      arma::ucolvec indx = RcppArmadillo::sample(elem, pcl_num, true, wght);
       mut_frq_pst = mut_frq_pre.elem(indx);
       mut_frq_pth = mut_frq_pth.rows(indx);
     } else {
@@ -517,7 +517,7 @@ List calculateOptimalParticleNum_arma(const arma::dcolvec& sel_cof, const double
   // ensure RNG gets set/reset
   RNGScope scope;
 
-  arma::imat grp_smp = groupSample_arma(raw_smp, evt_gen);
+  arma::imat grp_smp = groupGeno_arma(raw_smp, evt_gen);
   arma::irowvec smp_gen = grp_smp.row(0);
   arma::irowvec smp_siz = grp_smp.row(1);
   arma::imat smp_cnt = grp_smp.rows(2, 4);
@@ -594,7 +594,7 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
   // ensure RNG gets set/reset
   RNGScope scope;
 
-  arma::imat grp_smp = groupSample_arma(raw_smp, evt_gen);
+  arma::imat grp_smp = groupGeno_arma(raw_smp, evt_gen);
   arma::irowvec smp_gen = grp_smp.row(0);
   arma::irowvec smp_siz = grp_smp.row(1);
   arma::imat smp_cnt = grp_smp.rows(2, 4);
@@ -668,7 +668,7 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
   // ensure RNG gets set/reset
   RNGScope scope;
 
-  arma::imat grp_smp = groupSample_arma(raw_smp, evt_gen);
+  arma::imat grp_smp = groupGeno_arma(raw_smp, evt_gen);
   arma::irowvec smp_gen = grp_smp.row(0);
   arma::irowvec smp_siz = grp_smp.row(1);
   arma::imat smp_cnt = grp_smp.rows(2, 4);
