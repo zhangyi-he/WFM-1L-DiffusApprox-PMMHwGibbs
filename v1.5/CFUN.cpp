@@ -1,5 +1,5 @@
 // Estimating selection coefficients and testing their changes from ancient DNA data
-// Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu, Zhangyi He
+// Zhangyi He, Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu
 
 // version 1.5
 // Phenotypes controlled by a single gene
@@ -245,26 +245,26 @@ arma::imat determineGeno_arma(const arma::dmat& raw_smp, const arma::dcolvec& se
     }
   }
 
-  arma::imat imp_smp = arma::zeros<arma::imat>(4, raw_smp.n_cols);
-  imp_smp.row(0) = smp_gen;
-  imp_smp.rows(1, 3) = smp_cnt;
+  arma::imat cal_smp = arma::zeros<arma::imat>(4, raw_smp.n_cols);
+  cal_smp.row(0) = smp_gen;
+  cal_smp.rows(1, 3) = smp_cnt;
 
-  return imp_smp;
+  return cal_smp;
 }
 
 // Group the genotype of the sample (treat the event as a pseudo sample with 0 sample size and 0 sample count)
 // [[Rcpp::export]]
-arma::imat groupGeno_arma(const arma::imat& imp_smp, const int& evt_gen) {
+arma::imat groupGeno_arma(const arma::imat& cal_smp, const int& evt_gen) {
   // ensure RNG gets set/reset
   RNGScope scope;
 
-  arma::irowvec smp_gen = arma::unique(imp_smp.row(0));
+  arma::irowvec smp_gen = arma::unique(cal_smp.row(0));
 
   arma::imat smp_cnt = arma::zeros<arma::imat>(3, smp_gen.n_cols);
   arma::ucolvec grp_row = {1, 2, 3};
   for (arma::uword i = 0; i < smp_gen.n_elem; i++) {
-    arma::ucolvec grp_col = arma::find(imp_smp.row(0) == smp_gen(i));
-    arma::imat grp_cnt = imp_smp.submat(grp_row, grp_col);
+    arma::ucolvec grp_col = arma::find(cal_smp.row(0) == smp_gen(i));
+    arma::imat grp_cnt = cal_smp.submat(grp_row, grp_col);
     smp_cnt.col(i) = arma::sum(grp_cnt, 1);
   }
 
@@ -288,11 +288,11 @@ arma::imat groupGeno_arma(const arma::imat& imp_smp, const int& evt_gen) {
 
 // Calculate the sum of the log genotype likelihoods
 // [[Rcpp::export]]
-double calculateLogGenoLikelihood_arma(const arma::dmat& raw_smp, const arma::imat& imp_smp) {
+double calculateLogGenoLikelihood_arma(const arma::dmat& raw_smp, const arma::imat& cal_smp) {
   // ensure RNG gets set/reset
   RNGScope scope;
 
-  arma::drowvec gen_lik = arma::sum(raw_smp.rows(1, 3) % imp_smp.rows(1, 3), 0);
+  arma::drowvec gen_lik = arma::sum(raw_smp.rows(1, 3) % cal_smp.rows(1, 3), 0);
 
   return arma::sum(log(gen_lik));
 }
@@ -303,17 +303,17 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
   // ensure RNG gets set/reset
   RNGScope scope;
 
-  arma::imat imp_smp = determineGeno_arma(raw_smp, sel_cof, dom_par, evt_gen, mut_pth);
+  arma::imat cal_smp = determineGeno_arma(raw_smp, sel_cof, dom_par, evt_gen, mut_pth);
 
-  arma::imat grp_smp = groupGeno_arma(imp_smp, evt_gen);
+  arma::imat grp_smp = groupGeno_arma(cal_smp, evt_gen);
   arma::irowvec smp_gen = grp_smp.row(0);
   arma::irowvec smp_siz = grp_smp.row(1);
   arma::imat smp_cnt = grp_smp.rows(2, 4);
 
-  double log_lik = calculateLogGenoLikelihood_arma(raw_smp, imp_smp);
+  double log_lik = calculateLogGenoLikelihood_arma(raw_smp, cal_smp);
   double lik = exp(log_lik);
 
-  arma::uword evt_ind = arma::as_scalar(arma::find(smp_siz == 0));
+  arma::uword evt_idx = arma::as_scalar(arma::find(smp_siz == 0));
 
   arma::dmat wght = arma::zeros<arma::dmat>(pcl_num, smp_gen.n_elem);
   arma::dmat mut_frq_pth = arma::zeros<arma::dmat>(pcl_num, arma::uword(arma::max(smp_gen) - arma::min(smp_gen)) * ptn_num + 1);
@@ -366,7 +366,7 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
   }
 
   // run the bootstrap particle filter
-  for (arma::uword k = 1; k < evt_ind; k++) {
+  for (arma::uword k = 1; k < evt_idx; k++) {
     cout << "generation: " << smp_gen(k) << endl;
     wght_tmp = arma::zeros<arma::dcolvec>(pcl_num);
     mut_frq_tmp = mut_frq_pst.col(k - 1);
@@ -408,30 +408,30 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
     }
   }
 
-  if (smp_gen(evt_ind) == smp_gen(evt_ind - 1)) {
-    mut_frq_pre.col(evt_ind) = mut_frq_pre.col(evt_ind - 1);
-    mut_frq_pst.col(evt_ind) = mut_frq_pst.col(evt_ind - 1);
-    gen_frq_pre.slice(evt_ind) = gen_frq_pre.slice(evt_ind - 1);
-    gen_frq_pst.slice(evt_ind) = gen_frq_pst.slice(evt_ind - 1);
+  if (smp_gen(evt_idx) == smp_gen(evt_idx - 1)) {
+    mut_frq_pre.col(evt_idx) = mut_frq_pre.col(evt_idx - 1);
+    mut_frq_pst.col(evt_idx) = mut_frq_pst.col(evt_idx - 1);
+    gen_frq_pre.slice(evt_idx) = gen_frq_pre.slice(evt_idx - 1);
+    gen_frq_pst.slice(evt_idx) = gen_frq_pst.slice(evt_idx - 1);
   } else {
-    cout << "generation: " << smp_gen(evt_ind) << endl;
-    mut_frq_tmp = mut_frq_pst.col(evt_ind - 1);
+    cout << "generation: " << smp_gen(evt_idx) << endl;
+    mut_frq_tmp = mut_frq_pst.col(evt_idx - 1);
     for (arma::uword i = 0; i < pcl_num; i++) {
-      arma::drowvec path = simulateWFD_arma(sel_cof(0), dom_par, pop_siz.subvec(smp_gen(evt_ind - 1), smp_gen(evt_ind)), ref_siz, mut_frq_tmp(i), smp_gen(evt_ind - 1), smp_gen(evt_ind), ptn_num);
-      mut_frq_pth.submat(i, (smp_gen(evt_ind - 1) - smp_gen(0)) * ptn_num, i, (smp_gen(evt_ind) - smp_gen(0)) * ptn_num) = path;
+      arma::drowvec path = simulateWFD_arma(sel_cof(0), dom_par, pop_siz.subvec(smp_gen(evt_idx - 1), smp_gen(evt_idx)), ref_siz, mut_frq_tmp(i), smp_gen(evt_idx - 1), smp_gen(evt_idx), ptn_num);
+      mut_frq_pth.submat(i, (smp_gen(evt_idx - 1) - smp_gen(0)) * ptn_num, i, (smp_gen(evt_idx) - smp_gen(0)) * ptn_num) = path;
       mut_frq_tmp(i) = arma::as_scalar(path.tail(1));
       gen_frq_tmp.col(i) = calculateGenoFrq_arma(fts_mat, mut_frq_tmp(i));
     }
-    mut_frq_pre.col(evt_ind) = mut_frq_tmp;
-    mut_frq_pst.col(evt_ind) = mut_frq_tmp;
-    gen_frq_pre.slice(evt_ind) = gen_frq_tmp;
-    gen_frq_pst.slice(evt_ind) = gen_frq_tmp;
+    mut_frq_pre.col(evt_idx) = mut_frq_tmp;
+    mut_frq_pst.col(evt_idx) = mut_frq_tmp;
+    gen_frq_pre.slice(evt_idx) = gen_frq_tmp;
+    gen_frq_pst.slice(evt_idx) = gen_frq_tmp;
   }
 
   // after the event of interest
   fts_mat = calculateFitnessMat_arma(sel_cof(1), dom_par);
 
-  for (arma::uword k = evt_ind + 1; k < smp_gen.n_elem; k++) {
+  for (arma::uword k = evt_idx + 1; k < smp_gen.n_elem; k++) {
     cout << "generation: " << smp_gen(k) << endl;
     wght_tmp = arma::zeros<arma::dcolvec>(pcl_num);
     mut_frq_tmp = mut_frq_pst.col(k - 1);
@@ -467,12 +467,12 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
     }
   }
 
-  if (smp_gen(evt_ind) != smp_gen(evt_ind - 1)) {
-    wght.shed_col(evt_ind);
-    mut_frq_pre.shed_col(evt_ind);
-    mut_frq_pst.shed_col(evt_ind);
-    gen_frq_pre.shed_slice(evt_ind);
-    gen_frq_pst.shed_slice(evt_ind);
+  if (smp_gen(evt_idx) != smp_gen(evt_idx - 1)) {
+    wght.shed_col(evt_idx);
+    mut_frq_pre.shed_col(evt_idx);
+    mut_frq_pst.shed_col(evt_idx);
+    gen_frq_pre.shed_slice(evt_idx);
+    gen_frq_pst.shed_slice(evt_idx);
   }
 
   return List::create(Named("lik", lik),
@@ -496,7 +496,7 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
   // log_lik = 0;
   frq_pth = arma::zeros<arma::drowvec>(arma::uword(arma::max(smp_gen) - arma::min(smp_gen)) * ptn_num + 1);
 
-  arma::uword evt_ind = arma::as_scalar(arma::find(smp_siz == 0));
+  arma::uword evt_idx = arma::as_scalar(arma::find(smp_siz == 0));
 
   arma::dcolvec wght = arma::zeros<arma::dcolvec>(pcl_num);
   arma::dmat mut_frq_pth = arma::zeros<arma::dmat>(pcl_num, arma::uword(arma::max(smp_gen) - arma::min(smp_gen)) * ptn_num + 1);
@@ -525,7 +525,7 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
   }
 
   // run the bootstrap particle filter
-  for (arma::uword k = 1; k < evt_ind; k++) {
+  for (arma::uword k = 1; k < evt_idx; k++) {
     wght = arma::zeros<arma::dcolvec>(pcl_num);
     for (arma::uword i = 0; i < pcl_num; i++) {
       arma::drowvec path = simulateWFD_arma(sel_cof(0), dom_par, pop_siz.subvec(smp_gen(k - 1), smp_gen(k)), ref_siz, mut_frq_pst(i), smp_gen(k - 1), smp_gen(k), ptn_num);
@@ -548,10 +548,10 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
     }
   }
 
-  if (smp_gen(evt_ind) != smp_gen(evt_ind - 1)) {
+  if (smp_gen(evt_idx) != smp_gen(evt_idx - 1)) {
     for (arma::uword i = 0; i < pcl_num; i++) {
-      arma::drowvec path = simulateWFD_arma(sel_cof(0), dom_par, pop_siz.subvec(smp_gen(evt_ind - 1), smp_gen(evt_ind)), ref_siz, mut_frq_pst(i), smp_gen(evt_ind - 1), smp_gen(evt_ind), ptn_num);
-      mut_frq_pth.submat(i, (smp_gen(evt_ind - 1) - smp_gen(0)) * ptn_num, i, (smp_gen(evt_ind) - smp_gen(0)) * ptn_num) = path;
+      arma::drowvec path = simulateWFD_arma(sel_cof(0), dom_par, pop_siz.subvec(smp_gen(evt_idx - 1), smp_gen(evt_idx)), ref_siz, mut_frq_pst(i), smp_gen(evt_idx - 1), smp_gen(evt_idx), ptn_num);
+      mut_frq_pth.submat(i, (smp_gen(evt_idx - 1) - smp_gen(0)) * ptn_num, i, (smp_gen(evt_idx) - smp_gen(0)) * ptn_num) = path;
       mut_frq_pre(i) = arma::as_scalar(path.tail(1));
     }
     mut_frq_pst = mut_frq_pre;
@@ -560,7 +560,7 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
   // after the event of interest
   fts_mat = calculateFitnessMat_arma(sel_cof(1), dom_par);
 
-  for (arma::uword k = evt_ind + 1; k < smp_gen.n_elem; k++) {
+  for (arma::uword k = evt_idx + 1; k < smp_gen.n_elem; k++) {
     wght = arma::zeros<arma::dcolvec>(pcl_num);
     for (arma::uword i = 0; i < pcl_num; i++) {
       arma::drowvec path = simulateWFD_arma(sel_cof(1), dom_par, pop_siz.subvec(smp_gen(k - 1), smp_gen(k)), ref_siz, mut_frq_pst(i), smp_gen(k - 1), smp_gen(k), ptn_num);
@@ -594,9 +594,9 @@ List calculateOptimalParticleNum_arma(const arma::dcolvec& sel_cof, const double
   // ensure RNG gets set/reset
   RNGScope scope;
 
-  arma::imat imp_smp = determineGeno_arma(raw_smp, sel_cof, dom_par, evt_gen, mut_pth);
+  arma::imat cal_smp = determineGeno_arma(raw_smp, sel_cof, dom_par, evt_gen, mut_pth);
 
-  arma::imat grp_smp = groupGeno_arma(imp_smp, evt_gen);
+  arma::imat grp_smp = groupGeno_arma(cal_smp, evt_gen);
   arma::irowvec smp_gen = grp_smp.row(0);
   arma::irowvec smp_siz = grp_smp.row(1);
   arma::imat smp_cnt = grp_smp.rows(2, 4);
@@ -604,7 +604,7 @@ List calculateOptimalParticleNum_arma(const arma::dcolvec& sel_cof, const double
   arma::drowvec log_lik(300);
   arma::drowvec frq_pth = arma::zeros<arma::drowvec>(arma::uword(arma::max(smp_gen) - arma::min(smp_gen)) * ptn_num + 1);
   for (arma::uword i = 0; i < 300; i++) {
-    log_lik(i) = calculateLogGenoLikelihood_arma(raw_smp, imp_smp);
+    log_lik(i) = calculateLogGenoLikelihood_arma(raw_smp, cal_smp);
     calculateLogLikelihood_arma(log_lik(i), frq_pth, sel_cof, dom_par, pop_siz, ref_siz, smp_gen, smp_siz, smp_cnt, ptn_num, pcl_num);
   }
 
@@ -619,7 +619,7 @@ List calculateOptimalParticleNum_arma(const arma::dcolvec& sel_cof, const double
       opt_pcl_num.insert_cols(0, 1);
       opt_pcl_num(0) = opt_pcl_num(1) + gap_num;
       for (arma::uword i = 0; i < 300; i++) {
-        log_lik(i) = calculateLogGenoLikelihood_arma(raw_smp, imp_smp);
+        log_lik(i) = calculateLogGenoLikelihood_arma(raw_smp, cal_smp);
         calculateLogLikelihood_arma(log_lik(i), frq_pth, sel_cof, dom_par, pop_siz, ref_siz, smp_gen, smp_siz, smp_cnt, ptn_num, opt_pcl_num(0));
       }
       log_lik_sdv.insert_cols(0, 1);
@@ -633,7 +633,7 @@ List calculateOptimalParticleNum_arma(const arma::dcolvec& sel_cof, const double
       opt_pcl_num.insert_cols(0, 1);
       opt_pcl_num(0) = opt_pcl_num(1) - gap_num;
       for (arma::uword i = 0; i < 300; i++) {
-        log_lik(i) = calculateLogGenoLikelihood_arma(raw_smp, imp_smp);
+        log_lik(i) = calculateLogGenoLikelihood_arma(raw_smp, cal_smp);
         calculateLogLikelihood_arma(log_lik(i), frq_pth, sel_cof, dom_par, pop_siz, ref_siz, smp_gen, smp_siz, smp_cnt, ptn_num, opt_pcl_num(0));
       }
       log_lik_sdv.insert_cols(0, 1);
@@ -645,7 +645,7 @@ List calculateOptimalParticleNum_arma(const arma::dcolvec& sel_cof, const double
       opt_pcl_num.insert_cols(0, 1);
       opt_pcl_num(0) = opt_pcl_num(1) + gap_num;
       for (arma::uword i = 0; i < 300; i++) {
-        log_lik(i) = calculateLogGenoLikelihood_arma(raw_smp, imp_smp);
+        log_lik(i) = calculateLogGenoLikelihood_arma(raw_smp, cal_smp);
         calculateLogLikelihood_arma(log_lik(i), frq_pth, sel_cof, dom_par, pop_siz, ref_siz, smp_gen, smp_siz, smp_cnt, ptn_num, opt_pcl_num(0));
       }
       log_lik_sdv.insert_cols(0, 1);
@@ -659,7 +659,7 @@ List calculateOptimalParticleNum_arma(const arma::dcolvec& sel_cof, const double
       opt_pcl_num.insert_cols(0, 1);
       opt_pcl_num(0) = opt_pcl_num(1) - gap_num;
       for (arma::uword i = 0; i < 300; i++) {
-        log_lik(i) = calculateLogGenoLikelihood_arma(raw_smp, imp_smp);
+        log_lik(i) = calculateLogGenoLikelihood_arma(raw_smp, cal_smp);
         calculateLogLikelihood_arma(log_lik(i), frq_pth, sel_cof, dom_par, pop_siz, ref_siz, smp_gen, smp_siz, smp_cnt, ptn_num, opt_pcl_num(0));
       }
       log_lik_sdv.insert_cols(0, 1);
@@ -680,7 +680,7 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
 
   arma::dmat sel_cof_chn = arma::zeros<arma::dmat>(2, itn_num);
   arma::dmat frq_pth_chn = arma::zeros<arma::dmat>(itn_num, arma::uword(arma::max(raw_smp.row(0)) - arma::min(raw_smp.row(0))) + 1);
-  arma::icube imp_smp_chn = arma::zeros<arma::icube>(3, raw_smp.n_cols, itn_num);
+  arma::icube cal_smp_chn = arma::zeros<arma::icube>(3, raw_smp.n_cols, itn_num);
 
   //arma::drowvec log_pri_chn = arma::zeros<arma::drowvec>(2);
   arma::drowvec log_lik = arma::zeros<arma::drowvec>(2);
@@ -692,10 +692,10 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
   cout << "iteration: " << 1 << endl;
 
   frq_pth.fill(0.5);
-  arma::imat imp_smp = determineGeno_arma(raw_smp, sel_cof_chn.col(0), dom_par, evt_gen, frq_pth);
-  imp_smp_chn.slice(0) = imp_smp.rows(1, 3);
+  arma::imat cal_smp = determineGeno_arma(raw_smp, sel_cof_chn.col(0), dom_par, evt_gen, frq_pth);
+  cal_smp_chn.slice(0) = cal_smp.rows(1, 3);
 
-  arma::imat grp_smp = groupGeno_arma(imp_smp, evt_gen);
+  arma::imat grp_smp = groupGeno_arma(cal_smp, evt_gen);
   arma::irowvec smp_gen = grp_smp.row(0);
   arma::irowvec smp_siz = grp_smp.row(1);
   arma::imat smp_cnt = grp_smp.rows(2, 4);
@@ -704,7 +704,7 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
   // or take the beta prior with alpha = 1 and beta = 3
   sel_cof_chn.col(0) = sel_cof;
 
-  log_lik(0) = calculateLogGenoLikelihood_arma(raw_smp, imp_smp);
+  log_lik(0) = calculateLogGenoLikelihood_arma(raw_smp, cal_smp);
   calculateLogLikelihood_arma(log_lik(0), frq_pth, sel_cof_chn.col(0), dom_par, pop_siz, ref_siz, smp_gen, smp_siz, smp_cnt, ptn_num, pcl_num);
   arma::ucolvec frq_idx = arma::linspace<arma::ucolvec>(0, smp_gen.max() - smp_gen.min(), smp_gen.max() - smp_gen.min() + 1) * ptn_num;
   frq_pth_chn.row(0) = arma::conv_to<arma::drowvec >::from(frq_pth.elem(frq_idx));
@@ -713,10 +713,10 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
   for (arma::uword i = 1; i < itn_num; i++) {
     cout << "iteration: " << i + 1 << endl;
 
-    imp_smp = determineGeno_arma(raw_smp, sel_cof_chn.col(i - 1), dom_par, evt_gen, frq_pth_chn.row(i - 1));
-    imp_smp_chn.slice(i) = imp_smp.rows(1, 3);
+    cal_smp = determineGeno_arma(raw_smp, sel_cof_chn.col(i - 1), dom_par, evt_gen, frq_pth_chn.row(i - 1));
+    cal_smp_chn.slice(i) = cal_smp.rows(1, 3);
 
-    grp_smp = groupGeno_arma(imp_smp, evt_gen);
+    grp_smp = groupGeno_arma(cal_smp, evt_gen);
     smp_gen = grp_smp.row(0);
     smp_siz = grp_smp.row(1);
     smp_cnt = grp_smp.rows(2, 4);
@@ -735,7 +735,7 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
       // arma::drowvec log_psl = arma::zeros<arma::drowvec>(2);
 
       // calculate the likelihood
-      log_lik(1) = calculateLogGenoLikelihood_arma(raw_smp, imp_smp);
+      log_lik(1) = calculateLogGenoLikelihood_arma(raw_smp, cal_smp);
       calculateLogLikelihood_arma(log_lik(1), frq_pth, sel_cof_chn.col(i), dom_par, pop_siz, ref_siz, smp_gen, smp_siz, smp_cnt, ptn_num, pcl_num);
       frq_pth_chn.row(i) = arma::conv_to<arma::drowvec >::from(frq_pth.elem(frq_idx));
 
@@ -759,7 +759,7 @@ List runPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arm
 
   return List::create(Named("sel_cof_chn", sel_cof_chn),
                       Named("frq_pth_chn", frq_pth_chn),
-                      Named("imp_smp_chn", imp_smp_chn));
+                      Named("cal_smp_chn", cal_smp_chn));
 }
 
 // Run the adaptive particle marginal Metropolis-Hastings
@@ -770,7 +770,7 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
 
   arma::dmat sel_cof_chn = arma::zeros<arma::dmat>(2, itn_num);
   arma::dmat frq_pth_chn = arma::zeros<arma::dmat>(itn_num, arma::uword(arma::max(raw_smp.row(0)) - arma::min(raw_smp.row(0))) + 1);
-  arma::icube imp_smp_chn = arma::zeros<arma::icube>(3, raw_smp.n_cols, itn_num);
+  arma::icube cal_smp_chn = arma::zeros<arma::icube>(3, raw_smp.n_cols, itn_num);
 
   //arma::drowvec log_pri_chn = arma::zeros<arma::drowvec>(2);
   arma::drowvec log_lik = arma::zeros<arma::drowvec>(2);
@@ -786,10 +786,10 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
   cout << "iteration: " << 1 << endl;
 
   frq_pth.fill(0.5);
-  arma::imat imp_smp = determineGeno_arma(raw_smp, sel_cof_chn.col(0), dom_par, evt_gen, frq_pth);
-  imp_smp_chn.slice(0) = imp_smp.rows(1, 3);
+  arma::imat cal_smp = determineGeno_arma(raw_smp, sel_cof_chn.col(0), dom_par, evt_gen, frq_pth);
+  cal_smp_chn.slice(0) = cal_smp.rows(1, 3);
 
-  arma::imat grp_smp = groupGeno_arma(imp_smp, evt_gen);
+  arma::imat grp_smp = groupGeno_arma(cal_smp, evt_gen);
   arma::irowvec smp_gen = grp_smp.row(0);
   arma::irowvec smp_siz = grp_smp.row(1);
   arma::imat smp_cnt = grp_smp.rows(2, 4);
@@ -798,7 +798,7 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
   // or take the beta prior with alpha = 1 and beta = 3
   sel_cof_chn.col(0) = sel_cof;
 
-  log_lik(0) = calculateLogGenoLikelihood_arma(raw_smp, imp_smp);
+  log_lik(0) = calculateLogGenoLikelihood_arma(raw_smp, cal_smp);
   calculateLogLikelihood_arma(log_lik(0), frq_pth, sel_cof_chn.col(0), dom_par, pop_siz, ref_siz, smp_gen, smp_siz, smp_cnt, ptn_num, pcl_num);
   arma::ucolvec frq_idx = arma::linspace<arma::ucolvec>(0, smp_gen.max() - smp_gen.min(), smp_gen.max() - smp_gen.min() + 1) * ptn_num;
   frq_pth_chn.row(0) = arma::conv_to<arma::drowvec >::from(frq_pth.elem(frq_idx));
@@ -808,10 +808,10 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
   for (arma::uword i = 1; i < itn_num; i++) {
     cout << "iteration: " << i + 1 << endl;
 
-    imp_smp = determineGeno_arma(raw_smp, sel_cof_chn.col(i - 1), dom_par, evt_gen, frq_pth_chn.row(i - 1));
-    imp_smp_chn.slice(i) = imp_smp.rows(1, 3);
+    cal_smp = determineGeno_arma(raw_smp, sel_cof_chn.col(i - 1), dom_par, evt_gen, frq_pth_chn.row(i - 1));
+    cal_smp_chn.slice(i) = cal_smp.rows(1, 3);
 
-    grp_smp = groupGeno_arma(imp_smp, evt_gen);
+    grp_smp = groupGeno_arma(cal_smp, evt_gen);
     smp_gen = grp_smp.row(0);
     smp_siz = grp_smp.row(1);
     smp_cnt = grp_smp.rows(2, 4);
@@ -832,7 +832,7 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
       // arma::drowvec log_psl = arma::zeros<arma::drowvec>(2);
 
       // calculate the likelihood
-      log_lik(1) = calculateLogGenoLikelihood_arma(raw_smp, imp_smp);
+      log_lik(1) = calculateLogGenoLikelihood_arma(raw_smp, cal_smp);
       calculateLogLikelihood_arma(log_lik(1), frq_pth, sel_cof_chn.col(i), dom_par, pop_siz, ref_siz, smp_gen, smp_siz, smp_cnt, ptn_num, pcl_num);
       frq_pth_chn.row(i) = arma::conv_to<arma::drowvec >::from(frq_pth.elem(frq_idx));
 
@@ -863,6 +863,6 @@ List runAdaptPMMH_arma(const arma::dcolvec& sel_cof, const double& dom_par, cons
 
   return List::create(Named("sel_cof_chn", sel_cof_chn),
                       Named("frq_pth_chn", frq_pth_chn),
-                      Named("imp_smp_chn", imp_smp_chn));
+                      Named("cal_smp_chn", cal_smp_chn));
 }
 /*************************/
