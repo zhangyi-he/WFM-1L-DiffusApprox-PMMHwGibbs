@@ -1,5 +1,5 @@
 #' @title Estimating selection coefficients and testing their changes from ancient DNA data
-#' @author Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu, Zhangyi He
+#' @author Zhangyi He, Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu
 
 #' version 1.0
 #' Phenotypes controlled by a single gene
