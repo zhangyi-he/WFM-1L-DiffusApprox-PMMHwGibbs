@@ -1,5 +1,5 @@
 // Estimating selection coefficients and testing their changes from ancient DNA data
-// Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu, Zhangyi He
+// Zhangyi He, Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu
 
 // version 1.0
 // Phenotypes controlled by a single gene
