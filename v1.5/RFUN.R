@@ -1,5 +1,5 @@
 #' @title Estimating selection coefficients and testing their changes from ancient DNA data
-#' @author Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu, Zhangyi He
+#' @author Zhangyi He, Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu
 
 #' version 1.5
 #' Phenotypes controlled by a single gene
@@ -13,6 +13,9 @@
 #' Genotype frequency data
 
 #' R functions
+
+#install.packages("gtools")
+library("gtools")
 
 #install.packages("purrr")
 library("purrr")
@@ -134,15 +137,15 @@ cmpsimulateWFD <- cmpfun(simulateWFD)
 #' @param pop_siz the size of the horse population (non-constant)
 #' @param int_con the initial mutant allele frequency of the population
 #' @param evt_gen the generation that the event of interest occurred
-#' @param smp_gen the sampling time points measured in one generation
-#' @param smp_siz the count of the horses drawn from the population at all sampling time points
-#' @param mis_rat the rate of the missing allele observed in the sample
+#' @param smp_lab the identifier of the sample assigned
+#' @param smp_gen the generation of the sample drawn
+#' @param smp_qua the quality of the sample tested
 #' @param thr_val the threshold for genotype calling
 #' @param ref_siz the reference size of the horse population
 #' @param ptn_num the number of the subintervals divided per generation in the Euler-Maruyama method for the WFD
 
 #' Standard version
-simulateHMM <- function(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_gen, smp_siz, mis_rat, thr_val, ...) {
+simulateHMM <- function(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_lab, smp_gen, smp_qua, thr_val, ...) {
   int_gen <- min(smp_gen)
   lst_gen <- max(smp_gen)
 
@@ -207,50 +210,48 @@ simulateHMM <- function(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_
   }
 
   # generate the sample genotype counts at all sampling time points
-  raw_smp <- NULL
+  tru_smp <- NULL
   for (k in 1:length(smp_gen)) {
-    raw_smp <- cbind(raw_smp, rbind(rep(smp_gen[k], times = smp_siz[k]), rmultinom(smp_siz[k], size = 1, prob = gen_frq[, smp_gen[k] - int_gen + 1])))
+    tru_smp <- cbind(tru_smp, rbind(rep(smp_gen[k], times = 1), rmultinom(1, size = 1, prob = gen_frq[, smp_gen[k] - int_gen + 1])))
   }
+  tru_smp <- as.data.frame(t(tru_smp))
+  tru_smp <- cbind(smp_lab, tru_smp)
+  rownames(tru_smp) <- NULL
+  colnames(tru_smp) <- c("id", "generation", "A0A0", "A0A1", "A1A1")
 
-  imp_smp <- raw_smp
-  imp_smp <- as.data.frame(t(imp_smp))
-  rownames(imp_smp) <- NULL
-  colnames(imp_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+  raw_smp <- tru_smp
+  sel_idx <- which(tru_smp$'A0A0' == 1)
+  raw_smp[sel_idx, 3:5] <- rdirichlet(length(sel_idx), alpha = c(smp_qua, (1 - smp_qua) / 2, (1 - smp_qua) / 2) * 1)
+  sel_idx <- which(tru_smp$'A0A1' == 1)
+  raw_smp[sel_idx, 3:5] <- rdirichlet(length(sel_idx), alpha = c((1 - smp_qua) / 2, smp_qua, (1 - smp_qua) / 2) * 1)
+  sel_idx <- which(tru_smp$'A1A1' == 1)
+  raw_smp[sel_idx, 3:5] <- rdirichlet(length(sel_idx), alpha = c((1 - smp_qua) / 2, (1 - smp_qua) / 2, smp_qua) * 1)
 
-  mis_smp <- rmultinom(ncol(raw_smp), size = 1, prob = c((1 - mis_rat)^2, 2 * (1 - mis_rat) * mis_rat, mis_rat^2))
-  for (i in 1:ncol(mis_smp)) {
-    if (mis_smp[1, i] == 1) {
-      idx <- c(which(raw_smp[2:4, i] == 1), which(raw_smp[2:4, i] != 1)) + 1
-      raw_smp[idx[1], i] <- runif(n = 1, min = thr_val, max = 1)
-      raw_smp[idx[2], i] <- runif(n = 1, min = 0, max = 1 - raw_smp[idx[1], i])
-      raw_smp[idx[3], i] <- 1 - raw_smp[idx[1], i] - raw_smp[idx[2], i]
-    }
-    if (mis_smp[2, i] == 1) {
-      if (raw_smp[2, i] == 1) {
-        raw_smp[2, i] <- runif(n = 1, min = 0.5, max = thr_val)
-        raw_smp[3, i] <- 1 - raw_smp[2, i]
-      } else if (raw_smp[4, i] == 1) {
-        raw_smp[4, i] <- runif(n = 1, min = 0.5, max = thr_val)
-        raw_smp[3, i] <- 1 - raw_smp[2, i]
-      } else {
-        raw_smp[3, i] <- runif(n = 1, min = 0.5, max = thr_val)
-        raw_smp[2, i] <- runif(n = 1, min = 0, max = 1 - raw_smp[3, i])
-        raw_smp[4, i] <- 1 - raw_smp[2, i] - raw_smp[3, i]
-      }
-    }
-    if (mis_smp[3, i] == 1) {
-      idx <- c(which(raw_smp[2:4, i] == 1), which(raw_smp[2:4, i] != 1)) + 1
-      raw_smp[idx[1], i] <- runif(n = 1, min = 0.5, max = thr_val)
-      raw_smp[idx[2], i] <- runif(n = 1, min = 0, max = 1 - raw_smp[idx[1], i])
-      raw_smp[idx[3], i] <- 1 - raw_smp[idx[1], i] - raw_smp[idx[2], i]
-    }
-  }
-  raw_smp <- as.data.frame(t(raw_smp))
-  rownames(raw_smp) <- NULL
-  colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+  cal_smp <- raw_smp
+  mis_idx <- 1:nrow(raw_smp)
+  sel_idx <- which(raw_smp$'A0A0' / raw_smp$'A0A1' >= thr_val & raw_smp$'A0A0' / raw_smp$'A1A1' >= thr_val)
+  cal_smp[sel_idx, 3:5] <- matrix(rep(c(1, 0, 0), times = length(sel_idx)), nrow = length(sel_idx), ncol = 3, byrow = TRUE)
+  mis_idx <- mis_idx[-which(mis_idx %in% sel_idx)]
+  sel_idx <- which(raw_smp$'A0A1' / raw_smp$'A0A0' >= thr_val & raw_smp$'A0A1' / raw_smp$'A1A1' >= thr_val)
+  cal_smp[sel_idx, 3:5] <- matrix(rep(c(0, 1, 0), times = length(sel_idx)), nrow = length(sel_idx), ncol = 3, byrow = TRUE)
+  mis_idx <- mis_idx[-which(mis_idx %in% sel_idx)]
+  sel_idx <- which(raw_smp$'A1A1' / raw_smp$'A0A0' >= thr_val & raw_smp$'A1A1' / raw_smp$'A0A1' >= thr_val)
+  cal_smp[sel_idx, 3:5] <- matrix(rep(c(0, 0, 1), times = length(sel_idx)), nrow = length(sel_idx), ncol = 3, byrow = TRUE)
+  cal_smp[mis_idx, 3:5] <- matrix(rep(c(NA, NA, NA), times = length(mis_idx)), nrow = length(mis_idx), ncol = 3, byrow = TRUE)
 
-  return(list(raw_smp = raw_smp,
-              imp_smp = imp_smp,
+  fil_smp <- cal_smp[complete.cases(cal_smp), ]
+
+  cal_rat <- nrow(fil_smp) / nrow(cal_smp)
+  # cal_rat
+  err_rat <- sum(rowSums(cal_smp[, -(1:2)] == tru_smp[, -(1:2)]) == 1, na.rm = TRUE) / nrow(fil_smp)
+  # err_rat
+
+  return(list(tru_smp = tru_smp,
+              raw_smp = raw_smp,
+              cal_smp = cal_smp,
+              fil_smp = fil_smp,
+              cal_rat = cal_rat,
+              err_rat = err_rat,
               gen_frq = gen_frq,
               mut_frq = mut_frq))
 }
@@ -274,28 +275,17 @@ cmpsimulateHMM <- cmpfun(simulateHMM)
 #' Standard version
 runBPF <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, frq_pth, raw_smp, ptn_num, pcl_num) {
   # preprocess the raw sample
-  if (ncol(raw_smp) == 4) {
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+  raw_smp <- as.data.frame(raw_smp)
+  rownames(raw_smp) <- NULL
+  colnames(raw_smp) <- c("id", "generation", "A0A0", "A0A1", "A1A1")
+  raw_smp <- raw_smp[order(raw_smp$generation), ]
+  evt_gen <- evt_gen - min(raw_smp$generation)
+  raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
 
-    raw_smp <- raw_smp[order(raw_smp$generation), ]
-    evt_gen <- evt_gen - min(raw_smp$generation)
-    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- NULL
-    raw_smp <- t(as.matrix(raw_smp))
-  } else {
-    raw_smp <- raw_smp[, -(2:3)]
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
-
-    raw_smp <- raw_smp[order(raw_smp$generation), ]
-    evt_gen <- evt_gen - min(raw_smp$generation)
-    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- NULL
-    raw_smp <- t(as.matrix(raw_smp))
-  }
+  raw_smp <- raw_smp[, -1]
+  rownames(raw_smp) <- NULL
+  colnames(raw_smp) <- NULL
+  raw_smp <- t(as.matrix(raw_smp))
 
   # run the BPF
   BPF <- runBPF_arma(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, frq_pth, raw_smp, ptn_num, pcl_num)
@@ -329,28 +319,17 @@ cmprunBPF <- cmpfun(runBPF)
 #' Standard version
 calculateOptimalParticleNum <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, frq_pth, raw_smp, ptn_num, pcl_num, gap_num) {
   # preprocess the raw sample
-  if (ncol(raw_smp) == 4) {
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+  raw_smp <- as.data.frame(raw_smp)
+  rownames(raw_smp) <- NULL
+  colnames(raw_smp) <- c("id", "generation", "A0A0", "A0A1", "A1A1")
+  raw_smp <- raw_smp[order(raw_smp$generation), ]
+  evt_gen <- evt_gen - min(raw_smp$generation)
+  raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
 
-    raw_smp <- raw_smp[order(raw_smp$generation), ]
-    evt_gen <- evt_gen - min(raw_smp$generation)
-    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- NULL
-    raw_smp <- t(as.matrix(raw_smp))
-  } else {
-    raw_smp <- raw_smp[, -(2:3)]
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
-
-    raw_smp <- raw_smp[order(raw_smp$generation), ]
-    evt_gen <- evt_gen - min(raw_smp$generation)
-    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- NULL
-    raw_smp <- t(as.matrix(raw_smp))
-  }
+  raw_smp <- raw_smp[, -1]
+  rownames(raw_smp) <- NULL
+  colnames(raw_smp) <- NULL
+  raw_smp <- t(as.matrix(raw_smp))
 
   # calculate the optimal particle number
   OptNum <- calculateOptimalParticleNum_arma(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, frq_pth, raw_smp, ptn_num, pcl_num, gap_num)
@@ -378,35 +357,24 @@ cmpcalculateOptimalParticleNum <- cmpfun(calculateOptimalParticleNum)
 #' Standard version
 runPMMH <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, raw_smp, ptn_num, pcl_num, itn_num) {
   # preprocess the raw sample
-  if (ncol(raw_smp) == 4) {
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+  raw_smp <- as.data.frame(raw_smp)
+  rownames(raw_smp) <- NULL
+  colnames(raw_smp) <- c("id", "generation", "A0A0", "A0A1", "A1A1")
+  raw_smp <- raw_smp[order(raw_smp$generation), ]
+  evt_gen <- evt_gen - min(raw_smp$generation)
+  raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
 
-    raw_smp <- raw_smp[order(raw_smp$generation), ]
-    evt_gen <- evt_gen - min(raw_smp$generation)
-    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- NULL
-    raw_smp <- t(as.matrix(raw_smp))
-  } else {
-    raw_smp <- raw_smp[, -(2:3)]
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
-
-    raw_smp <- raw_smp[order(raw_smp$generation), ]
-    evt_gen <- evt_gen - min(raw_smp$generation)
-    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- NULL
-    raw_smp <- t(as.matrix(raw_smp))
-  }
+  raw_smp <- raw_smp[, -1]
+  rownames(raw_smp) <- NULL
+  colnames(raw_smp) <- NULL
+  raw_smp <- t(as.matrix(raw_smp))
 
   # run the PMMH
   PMMH <- runPMMH_arma(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, raw_smp, ptn_num, pcl_num, itn_num)
 
   return(list(sel_cof_chn = as.matrix(PMMH$sel_cof_chn),
               frq_pth_chn = as.matrix(PMMH$frq_pth_chn),
-              imp_smp_chn = as.array(PMMH$imp_smp_chn)))
+              cal_smp_chn = as.array(PMMH$cal_smp_chn)))
 }
 #' Compiled version
 cmprunPMMH <- cmpfun(runPMMH)
@@ -430,35 +398,24 @@ cmprunPMMH <- cmpfun(runPMMH)
 #' Standard version
 runAdaptPMMH <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, raw_smp, ptn_num, pcl_num, itn_num, stp_siz, apt_rto) {
   # preprocess the raw sample
-  if (ncol(raw_smp) == 4) {
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+  raw_smp <- as.data.frame(raw_smp)
+  rownames(raw_smp) <- NULL
+  colnames(raw_smp) <- c("id", "generation", "A0A0", "A0A1", "A1A1")
+  raw_smp <- raw_smp[order(raw_smp$generation), ]
+  evt_gen <- evt_gen - min(raw_smp$generation)
+  raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
 
-    raw_smp <- raw_smp[order(raw_smp$generation), ]
-    evt_gen <- evt_gen - min(raw_smp$generation)
-    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- NULL
-    raw_smp <- t(as.matrix(raw_smp))
-  } else {
-    raw_smp <- raw_smp[, -(2:3)]
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
-
-    raw_smp <- raw_smp[order(raw_smp$generation), ]
-    evt_gen <- evt_gen - min(raw_smp$generation)
-    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- NULL
-    raw_smp <- t(as.matrix(raw_smp))
-  }
+  raw_smp <- raw_smp[, -1]
+  rownames(raw_smp) <- NULL
+  colnames(raw_smp) <- NULL
+  raw_smp <- t(as.matrix(raw_smp))
 
   # run the adaptive PMMH
   PMMH <- runAdaptPMMH_arma(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, raw_smp, ptn_num, pcl_num, itn_num, stp_siz, apt_rto)
 
   return(list(sel_cof_chn = as.matrix(PMMH$sel_cof_chn),
               frq_pth_chn = as.matrix(PMMH$frq_pth_chn),
-              imp_smp_chn = as.array(PMMH$imp_smp_chn)))
+              cal_smp_chn = as.array(PMMH$cal_smp_chn)))
 }
 #' Compiled version
 cmprunAdaptPMMH <- cmpfun(runAdaptPMMH)
@@ -485,28 +442,19 @@ cmprunAdaptPMMH <- cmpfun(runAdaptPMMH)
 #' Standard version
 runBayesianProcedure <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, raw_smp, ptn_num, pcl_num, itn_num, brn_num, thn_num, adp_set, ...) {
   # preprocess the raw sample
-  if (ncol(raw_smp) == 4) {
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+  raw_smp <- as.data.frame(raw_smp)
+  rownames(raw_smp) <- NULL
+  colnames(raw_smp) <- c("id", "generation", "A0A0", "A0A1", "A1A1")
+  raw_smp <- raw_smp[order(raw_smp$generation), ]
+  evt_gen <- evt_gen - min(raw_smp$generation)
+  raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
 
-    raw_smp <- raw_smp[order(raw_smp$generation), ]
-    evt_gen <- evt_gen - min(raw_smp$generation)
-    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- NULL
-    raw_smp <- t(as.matrix(raw_smp))
-  } else {
-    raw_smp <- raw_smp[, -(2:3)]
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- c("generation", "A0A0", "A0A1", "A1A1")
+  smp_lab <- raw_smp$id
 
-    raw_smp <- raw_smp[order(raw_smp$generation), ]
-    evt_gen <- evt_gen - min(raw_smp$generation)
-    raw_smp$generation <- raw_smp$generation - min(raw_smp$generation)
-    rownames(raw_smp) <- NULL
-    colnames(raw_smp) <- NULL
-    raw_smp <- t(as.matrix(raw_smp))
-  }
+  raw_smp <- raw_smp[, -1]
+  rownames(raw_smp) <- NULL
+  colnames(raw_smp) <- NULL
+  raw_smp <- t(as.matrix(raw_smp))
 
   if (adp_set == TRUE) {
     # run the adaptive PMMH
@@ -517,15 +465,15 @@ runBayesianProcedure <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, ra
   }
   sel_cof_chn <- as.matrix(PMMH$sel_cof_chn)
   frq_pth_chn <- as.matrix(PMMH$frq_pth_chn)
-  imp_smp_chn <- as.array(PMMH$imp_smp_chn)
+  cal_smp_chn <- as.array(PMMH$cal_smp_chn)
 
   # burn-in and thinning
   sel_cof_chn <- sel_cof_chn[, brn_num:dim(sel_cof_chn)[2]]
   sel_cof_chn <- sel_cof_chn[, (1:round(dim(sel_cof_chn)[2] / thn_num)) * thn_num]
   frq_pth_chn <- frq_pth_chn[brn_num:dim(frq_pth_chn)[1], ]
   frq_pth_chn <- frq_pth_chn[(1:round(dim(frq_pth_chn)[1] / thn_num)) * thn_num, ]
-  imp_smp_chn <- imp_smp_chn[, , brn_num:dim(imp_smp_chn)[3]]
-  imp_smp_chn <- imp_smp_chn[, , (1:round(dim(imp_smp_chn)[3] / thn_num)) * thn_num]
+  cal_smp_chn <- cal_smp_chn[, , brn_num:dim(cal_smp_chn)[3]]
+  cal_smp_chn <- cal_smp_chn[, , (1:round(dim(cal_smp_chn)[3] / thn_num)) * thn_num]
 
   # MMSE estimate for selection coefficients and mutant allele frequencies
   sel_cof_est <- rowMeans(sel_cof_chn)
@@ -550,14 +498,14 @@ runBayesianProcedure <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, ra
   dif_sel_hpd <- HPDinterval(as.mcmc(dif_sel_chn), prob = 0.95)
 
   # posterior probability for genotypes
-  imp_smp_est <- matrix(NA, nrow = ncol(raw_smp), ncol = 3)
-  for (i in 1:nrow(imp_smp_est)) {
-    imp_smp_est[i, ] <- rowSums(imp_smp_chn[, i, ]) / dim(imp_smp_chn)[3]
+  cal_smp_est <- matrix(NA, nrow = ncol(raw_smp), ncol = 3)
+  for (i in 1:nrow(cal_smp_est)) {
+    cal_smp_est[i, ] <- rowSums(cal_smp_chn[, i, ]) / dim(cal_smp_chn)[3]
   }
-  imp_smp_est <- cbind(raw_smp[1, ], imp_smp_est)
-  imp_smp_est <- as.data.frame(imp_smp_est)
-  rownames(imp_smp_est) <- NULL
-  colnames(imp_smp_est) <- c("generation", "A0A0", "A0A1", "A1A1")
+  cal_smp_est <- as.data.frame(cal_smp_est)
+  cal_smp_est <- cbind(smp_lab, raw_smp[1, ], cal_smp_est)
+  rownames(cal_smp_est) <- NULL
+  colnames(cal_smp_est) <- c("id", "generation", "A0A0", "A0A1", "A1A1")
 
   return(list(sel_cof_est = sel_cof_est,
               sel_cof_hpd = sel_cof_hpd,
@@ -568,8 +516,8 @@ runBayesianProcedure <- function(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, ra
               frq_pth_est = frq_pth_est,
               frq_pth_hpd = frq_pth_hpd,
               frq_pth_chn = frq_pth_chn,
-              imp_smp_est = imp_smp_est,
-              imp_smp_chn = imp_smp_chn))
+              cal_smp_est = cal_smp_est,
+              cal_smp_chn = cal_smp_chn))
 }
 #' Compiled version
 cmprunBayesianProcedure <- cmpfun(runBayesianProcedure)
