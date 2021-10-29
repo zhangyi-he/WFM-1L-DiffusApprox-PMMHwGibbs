@@ -1,5 +1,5 @@
 #' @title Estimating selection coefficients and testing their changes from ancient DNA data
-#' @author Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu, Zhangyi He
+#' @author Zhangyi He, Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu
 
 #' version 1.4
 #' Phenotypes controlled by a single gene
@@ -9,9 +9,6 @@
 
 #' Input: called genotypes
 #' Output: posteriors for the selection coefficient and the genotype frequency trajectories of the population
-
-# set the directory
-setwd("~/Dropbox/Jeffery He/iResearch/Publications/2019/HE2021-WFM-1L-DiffusApprox-PMMHwGibbs1-MolEcolResour")
 
 #install.packages("RColorBrewer")
 library("RColorBrewer")
@@ -127,8 +124,10 @@ hist(smp_WFD, breaks = seq(min(smp_WFM, smp_WFD), max(smp_WFM, smp_WFD), length.
 #' @param pop_siz the size of the horse population (non-constant)
 #' @param int_con the initial mutant allele frequency of the population
 #' @param evt_gen the generation that the event of interest occurred
-#' @param smp_gen the sampling time points measured in one generation
-#' @param smp_siz the count of the horses drawn from the population at all sampling time points
+#' @param smp_lab the identifier of the sample assigned
+#' @param smp_gen the generation of the sample drawn
+#' @param smp_qua the quality of the sample tested
+#' @param thr_val the threshold for genotype calling
 #' @param ref_siz the reference size of the horse population
 #' @param ptn_num the number of the subintervals divided per generation in the Euler-Maruyama method for the WFD
 
@@ -139,14 +138,16 @@ dom_par <- 0e+00
 pop_siz <- c(rep(1e+04, length.out = 201), rep(5e+03, length.out = 200), rep(1e+04, length.out = 100))
 int_con <- 2e-01
 evt_gen <- 240
-smp_gen <- (0:10) * 50
-smp_siz <- rep(50, 11)
+smp_lab <- 1:550
+smp_gen <- rep((0:10) * 50, each = 50)
+smp_qua <- 0.95
+thr_val <- 10
 
-sim_HMM_WFM <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_gen, smp_siz)
-raw_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$raw_smp, sum)
-smp_gen <- raw_smp[, 1]
-smp_siz <- rowSums(raw_smp[, -1])
-smp_cnt <- t(as.matrix(raw_smp[, 2:4]))
+sim_HMM_WFM <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_lab, smp_gen, smp_qua, thr_val)
+tru_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$tru_smp, sum)
+smp_gen <- tru_smp[, 1]
+smp_siz <- rowSums(tru_smp[, -(1:2)])
+smp_cnt <- t(as.matrix(tru_smp[, 3:5]))
 smp_frq <- smp_cnt %*% diag(1 / smp_siz)
 pop_frq <- sim_HMM_WFM$gen_frq
 
@@ -176,16 +177,18 @@ dom_par <- 0e+00
 pop_siz <- c(rep(1e+04, length.out = 201), rep(5e+03, length.out = 200), rep(1e+04, length.out = 100))
 int_con <- 2e-01
 evt_gen <- 240
-smp_gen <- (0:10) * 50
-smp_siz <- rep(50, 11)
+smp_lab <- 1:550
+smp_gen <- rep((0:10) * 50, each = 50)
+smp_qua <- 0.95
+thr_val <- 10
 ref_siz <- 1e+04
 ptn_num <- 5e+00
 
-sim_HMM_WFD <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_gen, smp_siz, ref_siz, ptn_num)
-raw_smp <- aggregate(. ~ generation, data = sim_HMM_WFD$raw_smp, sum)
-smp_gen <- raw_smp[, 1]
-smp_siz <- rowSums(raw_smp[, -1])
-smp_cnt <- t(as.matrix(raw_smp[, 2:4]))
+sim_HMM_WFD <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_lab, smp_gen, smp_qua, thr_val, ref_siz, ptn_num)
+tru_smp <- aggregate(. ~ generation, data = sim_HMM_WFD$tru_smp, sum)
+smp_gen <- tru_smp[, 1]
+smp_siz <- rowSums(tru_smp[, -(1:2)])
+smp_cnt <- t(as.matrix(tru_smp[, 3:5]))
 smp_frq <- smp_cnt %*% diag(1 / smp_siz)
 pop_frq <- sim_HMM_WFD$gen_frq
 
@@ -218,21 +221,24 @@ dom_par <- 0e+00
 pop_siz <- c(rep(1e+04, length.out = 201), rep(5e+03, length.out = 200), rep(1e+04, length.out = 100))
 int_con <- 2e-01
 evt_gen <- 240
-smp_gen <- (0:10) * 50
-smp_siz <- rep(50, 11)
+smp_lab <- 1:550
+smp_gen <- rep((0:10) * 50, each = 50)
+smp_qua <- 0.95
+thr_val <- 10
 
-sim_HMM_WFM <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_gen, smp_siz)
-raw_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$raw_smp, sum)
-smp_gen <- raw_smp[, 1]
-smp_siz <- rowSums(raw_smp[, -1])
-smp_cnt <- t(as.matrix(raw_smp[, 2:4]))
-smp_frq <- smp_cnt %*% diag(1 / smp_siz)
-pop_frq <- sim_HMM_WFM$gen_frq
+sim_HMM_WFM <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_lab, smp_gen, smp_qua, thr_val)
 
-save(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_gen, smp_siz, smp_cnt, smp_frq, pop_frq, sim_HMM_WFM,
+save(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_lab, smp_gen, smp_qua, thr_val, sim_HMM_WFM,
      file = "./TEST_SimData.rda")
 
 load("./TEST_SimData.rda")
+
+tru_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$tru_smp, sum)
+smp_gen <- tru_smp[, 1]
+smp_siz <- rowSums(tru_smp[, -(1:2)])
+smp_cnt <- t(as.matrix(tru_smp[, 3:5]))
+smp_frq <- smp_cnt %*% diag(1 / smp_siz)
+pop_frq <- sim_HMM_WFM$gen_frq
 
 pdf(file = "./TEST_SimData.pdf", width = 16, height = 12)
 par(mfrow = c(2, 2), mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
@@ -276,7 +282,7 @@ dom_par
 pop_siz
 ref_siz <- 1e+04
 evt_gen <- 240
-raw_smp <- sim_HMM_WFM$raw_smp
+raw_smp <- sim_HMM_WFM$tru_smp
 ptn_num <- 5e+00
 pcl_num <- 1e+05
 
@@ -287,8 +293,14 @@ save(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, raw_smp, ptn_num, pcl_num, BPF
 
 load("./TEST_BPF.rda")
 
+tru_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$tru_smp, sum)
+smp_gen <- tru_smp[, 1]
+smp_siz <- rowSums(tru_smp[, -(1:2)])
+smp_cnt <- t(as.matrix(tru_smp[, 3:5]))
+smp_frq <- smp_cnt %*% diag(1 / smp_siz)
+
 lik <- rep(1, pcl_num)
-wght <- BPF$wght[, -which(sort(append(smp_gen, evt_gen)) == evt_gen)]
+wght <- BPF$wght
 for (k in 1:length(smp_gen)) {
   lik <- lik * (cumsum(wght[, k]) / (1:pcl_num))
 }
@@ -300,8 +312,8 @@ plot(1:pcl_num, log(lik), type = 'l',
      main = "Log likelihood through the bootstrap particle filter")
 dev.off()
 
-pop_frq_pre_resmp <- BPF$gen_frq_pre_resmp[, , -which(sort(append(smp_gen, evt_gen)) == evt_gen)]
-pop_frq_pst_resmp <- BPF$gen_frq_pst_resmp[, , -which(sort(append(smp_gen, evt_gen)) == evt_gen)]
+pop_frq_pre_resmp <- BPF$gen_frq_pre_resmp
+pop_frq_pst_resmp <- BPF$gen_frq_pst_resmp
 
 pdf(file = "./TEST_BPF_Particle.pdf", width = 24, height = 66)
 par(mfrow = c(11, 3), mar = c(5.5, 5, 5.5, 2.5), cex.main = 2, cex.sub = 1.75, cex.axis = 1.75, cex.lab = 1.75)
@@ -358,7 +370,7 @@ dom_par
 pop_siz
 ref_siz <- 1e+04
 evt_gen <- 240
-raw_smp <- sim_HMM_WFM$raw_smp
+raw_smp <- sim_HMM_WFM$tru_smp
 ptn_num <- 5e+00
 pcl_num <- 1e+03
 gap_num <- 1e+02
@@ -405,7 +417,7 @@ dom_par
 pop_siz
 ref_siz <- 1e+04
 evt_gen <- 240
-raw_smp <- sim_HMM_WFM$raw_smp
+raw_smp <- sim_HMM_WFM$tru_smp
 ptn_num <- 5e+00
 pcl_num <- 1e+03
 itn_num <- 2e+04
@@ -448,7 +460,7 @@ sel_cof_hpd <- matrix(NA, nrow = 2, ncol = 2)
 sel_cof_hpd[1, ] <- HPDinterval(as.mcmc(sel_cof_chn[1, ]), prob = 0.95)
 sel_cof_hpd[2, ] <- HPDinterval(as.mcmc(sel_cof_chn[2, ]), prob = 0.95)
 
-pdf(file = "./TEST_PMMH_Posterior_SelCoeff.pdf", width = 16, height = 6)
+pdf(file = "./Output/Output v1.0/Test v1.4/TEST_PMMH_Posterior_SelCoeff.pdf", width = 16, height = 6)
 par(mfrow = c(1, 2), mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn[1, ], breaks = seq(min(sel_cof_chn[1, ]), max(sel_cof_chn[1, ]), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
@@ -475,7 +487,7 @@ dif_sel_est <- mean(dif_sel_chn)
 
 dif_sel_hpd <- HPDinterval(as.mcmc(dif_sel_chn), prob = 0.95)
 
-pdf(file = "./TEST_PMMH_Posterior_SelChange.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/Test v1.4/TEST_PMMH_Posterior_SelChange.pdf", width = 12, height = 6)
 par(mar = c(5.1, 5.1, 4.1, 1.1), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(dif_sel_chn, breaks = seq(min(dif_sel_chn), max(dif_sel_chn), length.out = 50), freq = FALSE,
      xlab = "Change in selection coefficient",
@@ -497,7 +509,7 @@ for (i in 1:dim(frq_pth_chn)[2]) {
   frq_pth_hpd[, i] <- HPDinterval(as.mcmc(frq_pth_chn[, i]), prob = 0.95)
 }
 
-pdf(file = "./TEST_PMMH_Posterior_Traj.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/Test v1.4/TEST_PMMH_Posterior_Traj.pdf", width = 12, height = 6)
 par(mar = c(5.1, 5.1, 4.1, 1.1), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_chn, sim_HMM_WFM$mut_frq), max(frq_pth_chn, sim_HMM_WFM$mut_frq)),
      xlab = "Generation", ylab = "Allele frequency",
@@ -536,7 +548,7 @@ dom_par
 pop_siz
 ref_siz <- 1e+04
 evt_gen <- 240
-raw_smp <- sim_HMM_WFM$raw_smp
+raw_smp <- sim_HMM_WFM$tru_smp
 ptn_num <- 5e+00
 pcl_num <- 1e+03
 itn_num <- 2e+04
@@ -581,7 +593,7 @@ sel_cof_hpd <- matrix(NA, nrow = 2, ncol = 2)
 sel_cof_hpd[1, ] <- HPDinterval(as.mcmc(sel_cof_chn[1, ]), prob = 0.95)
 sel_cof_hpd[2, ] <- HPDinterval(as.mcmc(sel_cof_chn[2, ]), prob = 0.95)
 
-pdf(file = "./TEST_AdaptPMMH_Posterior_SelCoeff.pdf", width = 16, height = 6)
+pdf(file = "./Output/Output v1.0/Test v1.4/TEST_AdaptPMMH_Posterior_SelCoeff.pdf", width = 16, height = 6)
 par(mfrow = c(1, 2), mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(sel_cof_chn[1, ], breaks = seq(min(sel_cof_chn[1, ]), max(sel_cof_chn[1, ]), length.out = 50), freq = FALSE,
      xlab = "Selection coefficient",
@@ -608,7 +620,7 @@ dif_sel_est <- mean(dif_sel_chn)
 
 dif_sel_hpd <- HPDinterval(as.mcmc(dif_sel_chn), prob = 0.95)
 
-pdf(file = "./TEST_AdaptPMMH_Posterior_SelChange.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/Test v1.4/TEST_AdaptPMMH_Posterior_SelChange.pdf", width = 12, height = 6)
 par(mar = c(5.1, 5.1, 4.1, 1.1), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(dif_sel_chn, breaks = seq(min(dif_sel_chn), max(dif_sel_chn), length.out = 50), freq = FALSE,
      xlab = "Change in selection coefficient",
@@ -630,7 +642,7 @@ for (i in 1:dim(frq_pth_chn)[2]) {
   frq_pth_hpd[, i] <- HPDinterval(as.mcmc(frq_pth_chn[, i]), prob = 0.95)
 }
 
-pdf(file = "./TEST_AdaptPMMH_Posterior_Traj.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/Test v1.4/TEST_AdaptPMMH_Posterior_Traj.pdf", width = 12, height = 6)
 par(mar = c(5.1, 5.1, 4.1, 1.1), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_chn, sim_HMM_WFM$mut_frq), max(frq_pth_chn, sim_HMM_WFM$mut_frq)),
      xlab = "Generation", ylab = "Allele frequency",
@@ -672,7 +684,7 @@ dom_par
 pop_siz
 ref_siz <- 1e+04
 evt_gen <- 240
-raw_smp <- sim_HMM_WFM$raw_smp
+raw_smp <- sim_HMM_WFM$tru_smp
 ptn_num <- 5e+00
 pcl_num <- 1e+03
 itn_num <- 2e+04
@@ -720,7 +732,7 @@ dif_sel_chn <- BayesianProcedure$dif_sel_chn
 dif_sel_est <- BayesianProcedure$dif_sel_est
 dif_sel_hpd <- BayesianProcedure$dif_sel_hpd
 
-pdf(file = "./TEST_BayesProc_Posterior_SelChange.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/Test v1.4/TEST_BayesProc_Posterior_SelChange.pdf", width = 12, height = 6)
 par(mar = c(5.1, 5.1, 4.1, 1.1), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 hist(dif_sel_chn, breaks = seq(min(dif_sel_chn), max(dif_sel_chn), length.out = 50), freq = FALSE,
      xlab = "Change in selection coefficient",
@@ -736,7 +748,7 @@ frq_pth_chn <- BayesianProcedure$frq_pth_chn
 frq_pth_est <- BayesianProcedure$frq_pth_est
 frq_pth_hpd <- BayesianProcedure$frq_pth_hpd
 
-pdf(file = "./TEST_BayesProc_Posterior_Traj.pdf", width = 12, height = 6)
+pdf(file = "./Output/Output v1.0/Test v1.4/TEST_BayesProc_Posterior_Traj.pdf", width = 12, height = 6)
 par(mar = c(5.1, 5.1, 4.1, 1.1), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
 plot(0, type = 'n', xlim = c(min(smp_gen), max(smp_gen)), ylim = c(min(frq_pth_chn, sim_HMM_WFM$mut_frq), max(frq_pth_chn, sim_HMM_WFM$mut_frq)),
      xlab = "Generation", ylab = "Allele frequency",
