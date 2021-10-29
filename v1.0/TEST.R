@@ -1,5 +1,5 @@
 #' @title Estimating selection coefficients and testing their changes from ancient DNA data
-#' @author Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu, Zhangyi He
+#' @author Zhangyi He, Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu
 
 #' version 1.0
 #' Phenotypes controlled by a single gene
@@ -7,9 +7,6 @@
 
 #' Input: called genotypes
 #' Output: posteriors for the selection coefficient
-
-# set the directory
-setwd("~/Dropbox/Jeffery He/iResearch/Publications/2019/HE2021-WFM-1L-DiffusApprox-PMMHwGibbs1-MolEcolResour")
 
 #install.packages("RColorBrewer")
 library("RColorBrewer")
