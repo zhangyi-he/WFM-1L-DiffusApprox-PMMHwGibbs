@@ -1,5 +1,5 @@
 // Estimating selection coefficients and testing their changes from ancient DNA data
-// Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu, Zhangyi He
+// Zhangyi He, Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu
 
 // version 1.4
 // Phenotypes controlled by a single gene
@@ -236,7 +236,7 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
 
   double lik = 1;
 
-  arma::uword evt_ind = arma::as_scalar(arma::find(smp_siz == 0));
+  arma::uword evt_idx = arma::as_scalar(arma::find(smp_siz == 0));
 
   arma::dmat wght = arma::zeros<arma::dmat>(pcl_num, smp_gen.n_elem);
   arma::dmat mut_frq_pth = arma::zeros<arma::dmat>(pcl_num, arma::uword(arma::max(smp_gen) - arma::min(smp_gen)) * ptn_num + 1);
@@ -289,7 +289,7 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
   }
 
   // run the bootstrap particle filter
-  for (arma::uword k = 1; k < evt_ind; k++) {
+  for (arma::uword k = 1; k < evt_idx; k++) {
     cout << "generation: " << smp_gen(k) << endl;
     wght_tmp = arma::zeros<arma::dcolvec>(pcl_num);
     mut_frq_tmp = mut_frq_pst.col(k - 1);
@@ -331,30 +331,30 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
     }
   }
 
-  if (smp_gen(evt_ind) == smp_gen(evt_ind - 1)) {
-    mut_frq_pre.col(evt_ind) = mut_frq_pre.col(evt_ind - 1);
-    mut_frq_pst.col(evt_ind) = mut_frq_pst.col(evt_ind - 1);
-    gen_frq_pre.slice(evt_ind) = gen_frq_pre.slice(evt_ind - 1);
-    gen_frq_pst.slice(evt_ind) = gen_frq_pst.slice(evt_ind - 1);
+  if (smp_gen(evt_idx) == smp_gen(evt_idx - 1)) {
+    mut_frq_pre.col(evt_idx) = mut_frq_pre.col(evt_idx - 1);
+    mut_frq_pst.col(evt_idx) = mut_frq_pst.col(evt_idx - 1);
+    gen_frq_pre.slice(evt_idx) = gen_frq_pre.slice(evt_idx - 1);
+    gen_frq_pst.slice(evt_idx) = gen_frq_pst.slice(evt_idx - 1);
   } else {
-    cout << "generation: " << smp_gen(evt_ind) << endl;
-    mut_frq_tmp = mut_frq_pst.col(evt_ind - 1);
+    cout << "generation: " << smp_gen(evt_idx) << endl;
+    mut_frq_tmp = mut_frq_pst.col(evt_idx - 1);
     for (arma::uword i = 0; i < pcl_num; i++) {
-      arma::drowvec path = simulateWFD_arma(sel_cof(0), dom_par, pop_siz.subvec(smp_gen(evt_ind - 1), smp_gen(evt_ind)), ref_siz, mut_frq_tmp(i), smp_gen(evt_ind - 1), smp_gen(evt_ind), ptn_num);
-      mut_frq_pth.submat(i, (smp_gen(evt_ind - 1) - smp_gen(0)) * ptn_num, i, (smp_gen(evt_ind) - smp_gen(0)) * ptn_num) = path;
+      arma::drowvec path = simulateWFD_arma(sel_cof(0), dom_par, pop_siz.subvec(smp_gen(evt_idx - 1), smp_gen(evt_idx)), ref_siz, mut_frq_tmp(i), smp_gen(evt_idx - 1), smp_gen(evt_idx), ptn_num);
+      mut_frq_pth.submat(i, (smp_gen(evt_idx - 1) - smp_gen(0)) * ptn_num, i, (smp_gen(evt_idx) - smp_gen(0)) * ptn_num) = path;
       mut_frq_tmp(i) = arma::as_scalar(path.tail(1));
       gen_frq_tmp.col(i) = calculateGenoFrq_arma(fts_mat, mut_frq_tmp(i));
     }
-    mut_frq_pre.col(evt_ind) = mut_frq_tmp;
-    mut_frq_pst.col(evt_ind) = mut_frq_tmp;
-    gen_frq_pre.slice(evt_ind) = gen_frq_tmp;
-    gen_frq_pst.slice(evt_ind) = gen_frq_tmp;
+    mut_frq_pre.col(evt_idx) = mut_frq_tmp;
+    mut_frq_pst.col(evt_idx) = mut_frq_tmp;
+    gen_frq_pre.slice(evt_idx) = gen_frq_tmp;
+    gen_frq_pst.slice(evt_idx) = gen_frq_tmp;
   }
 
   // after the event of interest
   fts_mat = calculateFitnessMat_arma(sel_cof(1), dom_par);
 
-  for (arma::uword k = evt_ind + 1; k < smp_gen.n_elem; k++) {
+  for (arma::uword k = evt_idx + 1; k < smp_gen.n_elem; k++) {
     cout << "generation: " << smp_gen(k) << endl;
     wght_tmp = arma::zeros<arma::dcolvec>(pcl_num);
     mut_frq_tmp = mut_frq_pst.col(k - 1);
@@ -390,12 +390,12 @@ List runBPF_arma(const arma::dcolvec& sel_cof, const double& dom_par, const arma
     }
   }
 
-  if (smp_gen(evt_ind) != smp_gen(evt_ind - 1)) {
-    wght.shed_col(evt_ind);
-    mut_frq_pre.shed_col(evt_ind);
-    mut_frq_pst.shed_col(evt_ind);
-    gen_frq_pre.shed_slice(evt_ind);
-    gen_frq_pst.shed_slice(evt_ind);
+  if (smp_gen(evt_idx) != smp_gen(evt_idx - 1)) {
+    wght.shed_col(evt_idx);
+    mut_frq_pre.shed_col(evt_idx);
+    mut_frq_pst.shed_col(evt_idx);
+    gen_frq_pre.shed_slice(evt_idx);
+    gen_frq_pst.shed_slice(evt_idx);
   }
 
   return List::create(Named("lik", lik),
@@ -419,7 +419,7 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
   log_lik = 0;
   frq_pth = arma::zeros<arma::drowvec>(arma::uword(arma::max(smp_gen) - arma::min(smp_gen)) * ptn_num + 1);
 
-  arma::uword evt_ind = arma::as_scalar(arma::find(smp_siz == 0));
+  arma::uword evt_idx = arma::as_scalar(arma::find(smp_siz == 0));
 
   arma::dcolvec wght = arma::zeros<arma::dcolvec>(pcl_num);
   arma::dmat mut_frq_pth = arma::zeros<arma::dmat>(pcl_num, arma::uword(arma::max(smp_gen) - arma::min(smp_gen)) * ptn_num + 1);
@@ -448,7 +448,7 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
   }
 
   // run the bootstrap particle filter
-  for (arma::uword k = 1; k < evt_ind; k++) {
+  for (arma::uword k = 1; k < evt_idx; k++) {
     wght = arma::zeros<arma::dcolvec>(pcl_num);
     for (arma::uword i = 0; i < pcl_num; i++) {
       arma::drowvec path = simulateWFD_arma(sel_cof(0), dom_par, pop_siz.subvec(smp_gen(k - 1), smp_gen(k)), ref_siz, mut_frq_pst(i), smp_gen(k - 1), smp_gen(k), ptn_num);
@@ -471,10 +471,10 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
     }
   }
 
-  if (smp_gen(evt_ind) != smp_gen(evt_ind - 1)) {
+  if (smp_gen(evt_idx) != smp_gen(evt_idx - 1)) {
     for (arma::uword i = 0; i < pcl_num; i++) {
-      arma::drowvec path = simulateWFD_arma(sel_cof(0), dom_par, pop_siz.subvec(smp_gen(evt_ind - 1), smp_gen(evt_ind)), ref_siz, mut_frq_pst(i), smp_gen(evt_ind - 1), smp_gen(evt_ind), ptn_num);
-      mut_frq_pth.submat(i, (smp_gen(evt_ind - 1) - smp_gen(0)) * ptn_num, i, (smp_gen(evt_ind) - smp_gen(0)) * ptn_num) = path;
+      arma::drowvec path = simulateWFD_arma(sel_cof(0), dom_par, pop_siz.subvec(smp_gen(evt_idx - 1), smp_gen(evt_idx)), ref_siz, mut_frq_pst(i), smp_gen(evt_idx - 1), smp_gen(evt_idx), ptn_num);
+      mut_frq_pth.submat(i, (smp_gen(evt_idx - 1) - smp_gen(0)) * ptn_num, i, (smp_gen(evt_idx) - smp_gen(0)) * ptn_num) = path;
       mut_frq_pre(i) = arma::as_scalar(path.tail(1));
     }
     mut_frq_pst = mut_frq_pre;
@@ -483,7 +483,7 @@ void calculateLogLikelihood_arma(double& log_lik, arma::drowvec& frq_pth, const 
   // after the event of interest
   fts_mat = calculateFitnessMat_arma(sel_cof(1), dom_par);
 
-  for (arma::uword k = evt_ind + 1; k < smp_gen.n_elem; k++) {
+  for (arma::uword k = evt_idx + 1; k < smp_gen.n_elem; k++) {
     wght = arma::zeros<arma::dcolvec>(pcl_num);
     for (arma::uword i = 0; i < pcl_num; i++) {
       arma::drowvec path = simulateWFD_arma(sel_cof(1), dom_par, pop_siz.subvec(smp_gen(k - 1), smp_gen(k)), ref_siz, mut_frq_pst(i), smp_gen(k - 1), smp_gen(k), ptn_num);
