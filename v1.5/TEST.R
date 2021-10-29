@@ -1,5 +1,5 @@
 #' @title Estimating selection coefficients and testing their changes from ancient DNA data
-#' @author Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu, Zhangyi He
+#' @author Zhangyi He, Xiaoyang Dai, Wenyang Lyu, Mark Beaumont, Feng Yu
 
 #' version 1.5
 #' Phenotypes controlled by a single gene
@@ -11,9 +11,6 @@
 #' Output: posteriors for the selection coefficient, the genotype frequency trajectories of the population and the genotypes of the sample
 
 #' Genotype frequency data
-
-# set the directory
-setwd("~/Dropbox/Jeffery He/iResearch/Publications/2019/HE2021-WFM-1L-DiffusApprox-PMMHwGibbs1-MolEcolResour")
 
 #install.packages("RColorBrewer")
 library("RColorBrewer")
@@ -129,9 +126,9 @@ hist(smp_WFD, breaks = seq(min(smp_WFM, smp_WFD), max(smp_WFM, smp_WFD), length.
 #' @param pop_siz the size of the horse population (non-constant)
 #' @param int_con the initial mutant allele frequency of the population
 #' @param evt_gen the generation that the event of interest occurred
-#' @param smp_gen the sampling time points measured in one generation
-#' @param smp_siz the count of the horses drawn from the population at all sampling time points
-#' @param mis_rat the rate of the missing allele observed in the sample
+#' @param smp_lab the identifier of the sample assigned
+#' @param smp_gen the generation of the sample drawn
+#' @param smp_qua the quality of the sample tested
 #' @param thr_val the threshold for genotype calling
 #' @param ref_siz the reference size of the horse population
 #' @param ptn_num the number of the subintervals divided per generation in the Euler-Maruyama method for the WFD
@@ -143,16 +140,16 @@ dom_par <- 0e+00
 pop_siz <- c(rep(1e+04, length.out = 201), rep(5e+03, length.out = 200), rep(1e+04, length.out = 100))
 int_con <- 2e-01
 evt_gen <- 240
-smp_gen <- (0:10) * 50
-smp_siz <- rep(50, 11)
-mis_rat <- 3e-02
-thr_val <- 0.95
+smp_lab <- 1:550
+smp_gen <- rep((0:10) * 50, each = 50)
+smp_qua <- 0.95
+thr_val <- 10
 
-sim_HMM_WFM <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_gen, smp_siz, mis_rat, thr_val)
-imp_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$imp_smp, sum)
-smp_gen <- imp_smp[, 1]
-smp_siz <- rowSums(imp_smp[, -1])
-smp_cnt <- t(as.matrix(imp_smp[, 2:4]))
+sim_HMM_WFM <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_lab, smp_gen, smp_qua, thr_val)
+tru_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$tru_smp, sum)
+smp_gen <- tru_smp[, 1]
+smp_siz <- rowSums(tru_smp[, -(1:2)])
+smp_cnt <- t(as.matrix(tru_smp[, 3:5]))
 smp_frq <- smp_cnt %*% diag(1 / smp_siz)
 pop_frq <- sim_HMM_WFM$gen_frq
 
@@ -182,18 +179,18 @@ dom_par <- 0e+00
 pop_siz <- c(rep(1e+04, length.out = 201), rep(5e+03, length.out = 200), rep(1e+04, length.out = 100))
 int_con <- 2e-01
 evt_gen <- 240
-smp_gen <- (0:10) * 50
-smp_siz <- rep(50, 11)
-mis_rat <- 3e-02
-thr_val <- 0.95
+smp_lab <- 1:550
+smp_gen <- rep((0:10) * 50, each = 50)
+smp_qua <- 0.95
+thr_val <- 10
 ref_siz <- 1e+04
 ptn_num <- 5e+00
 
-sim_HMM_WFD <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_gen, smp_siz, mis_rat, thr_val, ref_siz, ptn_num)
-raw_smp <- aggregate(. ~ generation, data = sim_HMM_WFD$raw_smp, sum)
-smp_gen <- raw_smp[, 1]
-smp_siz <- rowSums(raw_smp[, -1])
-smp_cnt <- t(as.matrix(raw_smp[, 2:4]))
+sim_HMM_WFD <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_lab, smp_gen, smp_qua, thr_val, ref_siz, ptn_num)
+tru_smp <- aggregate(. ~ generation, data = sim_HMM_WFD$tru_smp, sum)
+smp_gen <- tru_smp[, 1]
+smp_siz <- rowSums(tru_smp[, -(1:2)])
+smp_cnt <- t(as.matrix(tru_smp[, 3:5]))
 smp_frq <- smp_cnt %*% diag(1 / smp_siz)
 pop_frq <- sim_HMM_WFD$gen_frq
 
@@ -226,23 +223,24 @@ dom_par <- 0e+00
 pop_siz <- c(rep(1e+04, length.out = 201), rep(5e+03, length.out = 200), rep(1e+04, length.out = 100))
 int_con <- 2e-01
 evt_gen <- 240
-smp_gen <- (0:10) * 50
-smp_siz <- rep(50, 11)
-mis_rat <- 3e-02
-thr_val <- 0.95
+smp_lab <- 1:550
+smp_gen <- rep((0:10) * 50, each = 50)
+smp_qua <- 0.95
+thr_val <- 10
 
-sim_HMM_WFM <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_gen, smp_siz, mis_rat, thr_val)
-imp_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$imp_smp, sum)
-smp_gen <- imp_smp[, 1]
-smp_siz <- rowSums(imp_smp[, -1])
-smp_cnt <- t(as.matrix(imp_smp[, 2:4]))
-smp_frq <- smp_cnt %*% diag(1 / smp_siz)
-pop_frq <- sim_HMM_WFM$gen_frq
+sim_HMM_WFM <- cmpsimulateHMM(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_lab, smp_gen, smp_qua, thr_val)
 
-save(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, mis_rat, thr_val, smp_gen, smp_siz, smp_cnt, smp_frq, pop_frq, sim_HMM_WFM,
+save(model, sel_cof, dom_par, pop_siz, int_con, evt_gen, smp_lab, smp_gen, smp_qua, thr_val, sim_HMM_WFM,
      file = "./TEST_SimData.rda")
 
 load("./TEST_SimData.rda")
+
+tru_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$tru_smp, sum)
+smp_gen <- tru_smp[, 1]
+smp_siz <- rowSums(tru_smp[, -(1:2)])
+smp_cnt <- t(as.matrix(tru_smp[, 3:5]))
+smp_frq <- smp_cnt %*% diag(1 / smp_siz)
+pop_frq <- sim_HMM_WFM$gen_frq
 
 pdf(file = "./TEST_SimData.pdf", width = 16, height = 12)
 par(mfrow = c(2, 2), mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
@@ -299,8 +297,14 @@ save(sel_cof, dom_par, pop_siz, ref_siz, evt_gen, frq_pth, raw_smp, ptn_num, pcl
 
 load("./TEST_BPF.rda")
 
+tru_smp <- aggregate(. ~ generation, data = sim_HMM_WFM$tru_smp, sum)
+smp_gen <- tru_smp[, 1]
+smp_siz <- rowSums(tru_smp[, -(1:2)])
+smp_cnt <- t(as.matrix(tru_smp[, 3:5]))
+smp_frq <- smp_cnt %*% diag(1 / smp_siz)
+
 lik <- rep(1, pcl_num)
-wght <- BPF$wght[, -which(sort(append(smp_gen, evt_gen)) == evt_gen)]
+wght <- BPF$wght
 for (k in 1:length(smp_gen)) {
   lik <- lik * (cumsum(wght[, k]) / (1:pcl_num))
 }
@@ -312,8 +316,8 @@ plot(1:pcl_num, log(lik), type = 'l',
      main = "Log likelihood through the bootstrap particle filter")
 dev.off()
 
-pop_frq_pre_resmp <- BPF$gen_frq_pre_resmp[, , -which(sort(append(smp_gen, evt_gen)) == evt_gen)]
-pop_frq_pst_resmp <- BPF$gen_frq_pst_resmp[, , -which(sort(append(smp_gen, evt_gen)) == evt_gen)]
+pop_frq_pre_resmp <- BPF$gen_frq_pre_resmp
+pop_frq_pst_resmp <- BPF$gen_frq_pst_resmp
 
 pdf(file = "./TEST_BPF_Particle.pdf", width = 24, height = 66)
 par(mfrow = c(11, 3), mar = c(5.5, 5, 5.5, 2.5), cex.main = 2, cex.sub = 1.75, cex.axis = 1.75, cex.lab = 1.75)
@@ -435,7 +439,7 @@ load("./TEST_PMMH.rda")
 
 sel_cof_chn <- PMMH$sel_cof_chn
 frq_pth_chn <- PMMH$frq_pth_chn
-imp_smp_chn <- PMMH$imp_smp_chn
+cal_smp_chn <- PMMH$cal_smp_chn
 
 pdf(file = "./TEST_PMMH_Traceplot.pdf", width = 16, height = 6)
 par(mfrow = c(1, 2), mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
@@ -526,21 +530,26 @@ lines(min(smp_gen):max(smp_gen), frq_pth_hpd[1, ], col = 'blue', lty = 2, lwd = 
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[2, ], col = 'blue', lty = 2, lwd = 2)
 dev.off()
 
-imp_smp_chn <- imp_smp_chn[, , brn_num:dim(imp_smp_chn)[3]]
-imp_smp_chn <- imp_smp_chn[, , (1:round(dim(imp_smp_chn)[3] / thn_num)) * thn_num]
+cal_smp_chn <- cal_smp_chn[, , brn_num:dim(cal_smp_chn)[3]]
+cal_smp_chn <- cal_smp_chn[, , (1:round(dim(cal_smp_chn)[3] / thn_num)) * thn_num]
 
-imp_smp_est <- matrix(NA, nrow = nrow(raw_smp), ncol = 3)
-for (i in 1:nrow(imp_smp_est)) {
-  imp_smp_est[i, ] <- rowSums(imp_smp_chn[, i, ]) / dim(imp_smp_chn)[3]
+cal_smp_est <- matrix(NA, nrow = nrow(raw_smp), ncol = 3)
+for (i in 1:nrow(cal_smp_est)) {
+  cal_smp_est[i, ] <- rowSums(cal_smp_chn[, i, ]) / dim(cal_smp_chn)[3]
 }
-imp_smp_est <- cbind(raw_smp[, 1], imp_smp_est)
-imp_smp_est <- as.data.frame(imp_smp_est)
-rownames(imp_smp_est) <- NULL
-colnames(imp_smp_est) <- c("generation", "A0A0", "A0A1", "A1A1")
+cal_smp_est <- cbind(raw_smp[, 1], cal_smp_est)
 
-imp_smp <- sim_HMM_WFM$imp_smp
-imp_smp <- imp_smp[order(imp_smp$generation), ]
-err_rat <- imp_smp_est[, -1] - imp_smp[, -1]
+raw_smp <- raw_smp[order(raw_smp$generation), ]
+smp_lab <- raw_smp$id
+
+cal_smp_est <- as.data.frame(cal_smp_est)
+cal_smp_est <- cbind(smp_lab, raw_smp[1, ], cal_smp_est)
+rownames(cal_smp_est) <- NULL
+colnames(cal_smp_est) <- c("id", "generation", "A0A0", "A0A1", "A1A1")
+
+tru_smp <- sim_HMM_WFM$tru_smp
+tru_smp <- tru_smp[order(tru_smp$generation), ]
+err_rat <- cal_smp_est[, -(1:2)] - tru_smp[, -(1:2)]
 err_rat$A0A0[which(err_rat$A0A0 < 0)] <- 0
 err_rat$A0A1[which(err_rat$A0A1 < 0)] <- 0
 err_rat$A1A1[which(err_rat$A1A1 < 0)] <- 0
@@ -590,7 +599,7 @@ load("./TEST_AdaptPMMH.rda")
 
 sel_cof_chn <- PMMH$sel_cof_chn
 frq_pth_chn <- PMMH$frq_pth_chn
-imp_smp_chn <- PMMH$imp_smp_chn
+cal_smp_chn <- PMMH$cal_smp_chn
 
 pdf(file = "./TEST_AdaptPMMH_Traceplot.pdf", width = 16, height = 6)
 par(mfrow = c(1, 2), mar = c(5.5, 5, 5.5, 2.5), cex.main = 1.75, cex.sub = 1.5, cex.axis = 1.5, cex.lab = 1.5)
@@ -681,21 +690,26 @@ lines(min(smp_gen):max(smp_gen), frq_pth_hpd[1, ], col = 'blue', lty = 2, lwd = 
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[2, ], col = 'blue', lty = 2, lwd = 2)
 dev.off()
 
-imp_smp_chn <- imp_smp_chn[, , brn_num:dim(imp_smp_chn)[3]]
-imp_smp_chn <- imp_smp_chn[, , (1:round(dim(imp_smp_chn)[3] / thn_num)) * thn_num]
+cal_smp_chn <- cal_smp_chn[, , brn_num:dim(cal_smp_chn)[3]]
+cal_smp_chn <- cal_smp_chn[, , (1:round(dim(cal_smp_chn)[3] / thn_num)) * thn_num]
 
-imp_smp_est <- matrix(NA, nrow = nrow(raw_smp), ncol = 3)
-for (i in 1:nrow(imp_smp_est)) {
-  imp_smp_est[i, ] <- rowSums(imp_smp_chn[, i, ]) / dim(imp_smp_chn)[3]
+cal_smp_est <- matrix(NA, nrow = nrow(raw_smp), ncol = 3)
+for (i in 1:nrow(cal_smp_est)) {
+  cal_smp_est[i, ] <- rowSums(cal_smp_chn[, i, ]) / dim(cal_smp_chn)[3]
 }
-imp_smp_est <- cbind(raw_smp[, 1], imp_smp_est)
-imp_smp_est <- as.data.frame(imp_smp_est)
-rownames(imp_smp_est) <- NULL
-colnames(imp_smp_est) <- c("generation", "A0A0", "A0A1", "A1A1")
+cal_smp_est <- cbind(raw_smp[, 1], cal_smp_est)
 
-imp_smp <- sim_HMM_WFM$imp_smp
-imp_smp <- imp_smp[order(imp_smp$generation), ]
-err_rat <- imp_smp_est[, -1] - imp_smp[, -1]
+raw_smp <- raw_smp[order(raw_smp$generation), ]
+smp_lab <- raw_smp$id
+
+cal_smp_est <- as.data.frame(cal_smp_est)
+cal_smp_est <- cbind(smp_lab, raw_smp[1, ], cal_smp_est)
+rownames(cal_smp_est) <- NULL
+colnames(cal_smp_est) <- c("id", "generation", "A0A0", "A0A1", "A1A1")
+
+tru_smp <- sim_HMM_WFM$tru_smp
+tru_smp <- tru_smp[order(tru_smp$generation), ]
+err_rat <- cal_smp_est[, -(1:2)] - tru_smp[, -(1:2)]
 err_rat$A0A0[which(err_rat$A0A0 < 0)] <- 0
 err_rat$A0A1[which(err_rat$A0A1 < 0)] <- 0
 err_rat$A1A1[which(err_rat$A1A1 < 0)] <- 0
@@ -808,11 +822,11 @@ lines(min(smp_gen):max(smp_gen), frq_pth_hpd[1, ], col = 'blue', lty = 2, lwd = 
 lines(min(smp_gen):max(smp_gen), frq_pth_hpd[2, ], col = 'blue', lty = 2, lwd = 2)
 dev.off()
 
-imp_smp_est <- BayesianProcedure$imp_smp_est
+cal_smp_est <- BayesianProcedure$cal_smp_est
 
-imp_smp <- sim_HMM_WFM$imp_smp
-imp_smp <- imp_smp[order(imp_smp$generation), ]
-err_rat <- imp_smp_est[, -1] - imp_smp[, -1]
+tru_smp <- sim_HMM_WFM$tru_smp
+tru_smp <- tru_smp[order(tru_smp$generation), ]
+err_rat <- cal_smp_est[, -(1:2)] - tru_smp[, -(1:2)]
 err_rat$A0A0[which(err_rat$A0A0 < 0)] <- 0
 err_rat$A0A1[which(err_rat$A0A1 < 0)] <- 0
 err_rat$A1A1[which(err_rat$A1A1 < 0)] <- 0
