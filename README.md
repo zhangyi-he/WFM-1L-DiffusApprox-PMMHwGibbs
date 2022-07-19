@@ -1,1 +1,1 @@
-# Estimating selection coefficients and testing their changes from ancient DNA data
+# Estimating temporally variable selection intensity from ancient DNA data with a combination of forward- and backward-in-time simulations
